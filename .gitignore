@@ -1,0 +1,5 @@
+*.o
+*.d
+z_jail
+build/
+_build/
