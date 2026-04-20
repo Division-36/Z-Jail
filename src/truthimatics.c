@@ -34,3 +34,33 @@ int axiom_evidence_add_fn(axiom_evidence_chain *chain,
 
     return 0;
 }
+
+int axiom_truthimatics_eval(axiom_evidence_chain *chain,
+    const char *target)
+{
+    struct axiom_evidence_link *link;
+
+    (void)target;
+
+    if (!chain->head) {
+        chain->verdict = AXIOM_VERDICT_UNCERTAIN;
+        chain->fail_reason = "no evidence collected";
+        return -1;
+    }
+
+    if (chain->verdict == AXIOM_VERDICT_REJECT) {
+        chain->fail_reason = "reject evidence in chain";
+        return -1;
+    }
+
+    for (link = chain->head; link; link = link->next) {
+        if (link->weight > (chain->total * 0.5)) {
+            chain->verdict = link->verdict;
+            return 0;
+        }
+    }
+
+    chain->verdict = AXIOM_VERDICT_UNCERTAIN;
+    chain->fail_reason = "no evidence above threshold";
+    return -1;
+}
