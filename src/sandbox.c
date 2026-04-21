@@ -38,3 +38,26 @@ static int drop_caps(void)
     setgid(65534); setuid(65534);
     return 0;
 }
+
+int child_run(void *arg)
+{
+    sandbox_config *cfg = (sandbox_config *)arg;
+    struct rlimit rl; int i;
+    rl.rlim_cur=16;rl.rlim_max=16;
+    if(setrlimit(RLIMIT_NOFILE,&rl)<0){_exit(AXIOM_CHILD_ERR_SETUP);}
+    rl.rlim_cur=cfg->as_limit;rl.rlim_max=cfg->as_limit;
+    if(setrlimit(RLIMIT_AS,&rl)<0){_exit(AXIOM_CHILD_ERR_SETUP);}
+    rl.rlim_cur=(rlim_t)cfg->timeout_sec;rl.rlim_max=(rlim_t)cfg->timeout_sec;
+    if(setrlimit(RLIMIT_CPU,&rl)<0){_exit(AXIOM_CHILD_ERR_SETUP);}
+    rl.rlim_cur=1;rl.rlim_max=1;
+    if(setrlimit(RLIMIT_NPROC,&rl)<0){_exit(AXIOM_CHILD_ERR_SETUP);}
+    for(i=3;i<1024;i++) if(i!=cfg->report_fd) close(i);
+    prctl(PR_SET_DUMPABLE,0,0,0,0);
+    if(pivot_into(cfg->root_path)<0){_exit(AXIOM_CHILD_ERR_PERM);}
+    prctl(PR_SET_NO_NEW_PRIVS,1,0,0,0);
+    if(drop_caps()<0){_exit(AXIOM_CHILD_ERR_CAP);}
+    if(cfg->seccomp_enforce && apply_whitelist()<0){_exit(AXIOM_CHILD_ERR_SECCOMP);}
+    {unsigned char ready=1;write(cfg->report_fd,&ready,1);}
+    execve(cfg->exec_path,cfg->exec_argv,cfg->exec_envp);
+    _exit(AXIOM_CHILD_ERR_EXEC);
+}
