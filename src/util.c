@@ -128,3 +128,60 @@ void axiom_blake2b_final(axiom_blake2b_ctx *ctx,
         out[i*8+7] = (uint8_t)(ctx->h[i] >> 56);
     }
 }
+
+int axiom_blake2b_file(const char *path,
+    uint8_t out[AXIOM_BLAKE2B_OUT_LEN])
+{
+    axiom_blake2b_ctx ctx;
+    uint8_t buf[4096];
+    int fd;
+    ssize_t n;
+
+    axiom_blake2b_init(&ctx);
+    fd = open(path, O_RDONLY);
+    if (fd < 0) return -1;
+
+    while ((n = read(fd, buf, sizeof(buf))) > 0)
+        axiom_blake2b_update(&ctx, buf, (size_t)n);
+    close(fd);
+    if (n < 0) return -1;
+
+    axiom_blake2b_final(&ctx, out);
+    return 0;
+}
+
+void axiom_hex_encode(const uint8_t *in, size_t inlen, char *out)
+{
+    static const char hex[] = "0123456789abcdef";
+    size_t i;
+    for (i = 0; i < inlen; i++) {
+        out[i*2]   = hex[(in[i] >> 4) & 0xf];
+        out[i*2+1] = hex[in[i] & 0xf];
+    }
+    out[inlen * 2] = '\0';
+}
+
+int axiom_hex_decode(const char *in, uint8_t *out, size_t outlen)
+{
+    size_t i;
+    for (i = 0; i < outlen; i++) {
+        int hi, lo;
+        if (in[i*2] >= '0' && in[i*2] <= '9') hi = in[i*2] - '0';
+        else if (in[i*2] >= 'a' && in[i*2] <= 'f') hi = in[i*2] - 'a' + 10;
+        else if (in[i*2] >= 'A' && in[i*2] <= 'F') hi = in[i*2] - 'A' + 10;
+        else return -1;
+        if (in[i*2+1] >= '0' && in[i*2+1] <= '9') lo = in[i*2+1] - '0';
+        else if (in[i*2+1] >= 'a' && in[i*2+1] <= 'f') lo = in[i*2+1] - 'a' + 10;
+        else if (in[i*2+1] >= 'A' && in[i*2+1] <= 'F') lo = in[i*2+1] - 'A' + 10;
+        else return -1;
+        out[i] = (uint8_t)((hi << 4) | lo);
+    }
+    return 0;
+}
+
+long long axiom_epoch_ns(void)
+{
+    struct timespec ts;
+    if (clock_gettime(CLOCK_MONOTONIC, &ts) < 0) return -1;
+    return (long long)ts.tv_sec * 1000000000LL + (long long)ts.tv_nsec;
+}
