@@ -1,0 +1,23 @@
+#include "z_jail.h"
+#include <sys/resource.h>
+#include <sys/mount.h>
+#include <linux/securebits.h>
+#include <linux/limits.h>
+
+static int pivot_into(const char *new_root)
+{
+    char put_old[PATH_MAX];
+    snprintf(put_old, sizeof(put_old), "%s/.pivot_old", new_root);
+    if (mkdir(put_old,0755)<0 && errno!=EEXIST)
+        { axiom_log(LOG_ERROR,"pivot: mkdir %s: %s\n",put_old,strerror(errno)); return -1; }
+    if (mount(new_root,new_root,NULL,MS_BIND|MS_REC,NULL)<0)
+        { axiom_log(LOG_ERROR,"pivot: bind mount: %s\n",strerror(errno)); return -1; }
+    if (syscall(SYS_pivot_root,new_root,put_old)<0)
+        { axiom_log(LOG_ERROR,"pivot: pivot_root: %s\n",strerror(errno)); return -1; }
+    if (chdir("/")<0)
+        { axiom_log(LOG_ERROR,"pivot: chdir /: %s\n",strerror(errno)); return -1; }
+    if (umount2("/.pivot_old",MNT_DETACH)<0)
+        axiom_log(LOG_WARN,"pivot: umount: %s\n",strerror(errno));
+    rmdir("/.pivot_old");
+    return 0;
+}
