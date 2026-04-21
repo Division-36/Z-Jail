@@ -76,3 +76,55 @@ static void b2b_compress(uint64_t h[8], const uint8_t block[128],
     for (i = 0; i < 8; i++)
         h[i] ^= v[i] ^ v[i + 8];
 }
+
+void axiom_blake2b_init(axiom_blake2b_ctx *ctx)
+{
+    memset(ctx, 0, sizeof(*ctx));
+    ctx->h[0] = IV[0] ^ 0x0000000001010020ULL;
+    ctx->h[1] = IV[1];
+    ctx->h[2] = IV[2];
+    ctx->h[3] = IV[3];
+    ctx->h[4] = IV[4];
+    ctx->h[5] = IV[5];
+    ctx->h[6] = IV[6];
+    ctx->h[7] = IV[7];
+}
+
+void axiom_blake2b_update(axiom_blake2b_ctx *ctx,
+    const void *data, size_t len)
+{
+    const uint8_t *p = (const uint8_t *)data;
+    size_t i;
+
+    for (i = 0; i < len; i++) {
+        ctx->buf[ctx->buflen++] = p[i];
+        if (ctx->buflen == AXIOM_BLAKE2B_BLOCK_LEN) {
+            b2b_compress(ctx->h, ctx->buf, ctx->t, 0);
+            ctx->t += AXIOM_BLAKE2B_BLOCK_LEN;
+            ctx->buflen = 0;
+        }
+    }
+}
+
+void axiom_blake2b_final(axiom_blake2b_ctx *ctx,
+    uint8_t out[AXIOM_BLAKE2B_OUT_LEN])
+{
+    size_t i;
+
+    if (ctx->buflen > 0) {
+        memset(ctx->buf + ctx->buflen, 0,
+            AXIOM_BLAKE2B_BLOCK_LEN - ctx->buflen);
+    }
+    b2b_compress(ctx->h, ctx->buf, ctx->t, 1);
+
+    for (i = 0; i < 4; i++) {
+        out[i*8+0] = (uint8_t)(ctx->h[i] >> 0);
+        out[i*8+1] = (uint8_t)(ctx->h[i] >> 8);
+        out[i*8+2] = (uint8_t)(ctx->h[i] >> 16);
+        out[i*8+3] = (uint8_t)(ctx->h[i] >> 24);
+        out[i*8+4] = (uint8_t)(ctx->h[i] >> 32);
+        out[i*8+5] = (uint8_t)(ctx->h[i] >> 40);
+        out[i*8+6] = (uint8_t)(ctx->h[i] >> 48);
+        out[i*8+7] = (uint8_t)(ctx->h[i] >> 56);
+    }
+}
