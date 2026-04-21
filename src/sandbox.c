@@ -21,3 +21,20 @@ static int pivot_into(const char *new_root)
     rmdir("/.pivot_old");
     return 0;
 }
+
+static int drop_caps(void)
+{
+    struct __user_cap_header_struct cap_hdr;
+    struct __user_cap_data_struct cap_data[2];
+    memset(&cap_hdr,0,sizeof(cap_hdr));
+    memset(cap_data,0,sizeof(cap_data));
+    cap_hdr.version = _LINUX_CAPABILITY_VERSION_3;
+    cap_hdr.pid = 0;
+    if (capset(&cap_hdr,cap_data)<0)
+        { axiom_log(LOG_ERROR,"caps: capset: %s\n",strerror(errno)); return -1; }
+    prctl(PR_SET_SECUREBITS,
+        SECBIT_KEEP_CAPS_LOCKED|SECBIT_NO_SETUID_FIXUP|SECBIT_NO_SETUID_FIXUP_LOCKED
+        |SECBIT_NOROOT|SECBIT_NOROOT_LOCKED, 0,0,0);
+    setgid(65534); setuid(65534);
+    return 0;
+}
