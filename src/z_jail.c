@@ -28,6 +28,15 @@ static const char*verdict_str(axiom_verdict v){
         default:return"UNKNOWN";
     }
 }
+static int do_self_hash(const char *hex){
+    uint8_t expected[32],actual[32];
+    if(!hex)return 0;
+    if(axiom_hex_decode(hex,expected,32)<0){fprintf(stderr,"bad hex\n");return -1;}
+    if(axiom_blake2b_file("/proc/self/exe",actual)<0){fprintf(stderr,"no hash\n");return -1;}
+    if(memcmp(expected,actual,32)!=0){fprintf(stderr,"SELF-HASH MISMATCH\n");return -2;}
+    axiom_log(LOG_INFO,"self-hash: OK\n");
+    return 0;
+}
 int main(int argc,char**argv){
     sandbox_config cfg;char*self_hash_hex=NULL;axiom_audit*audit=NULL;
     int pipe_fds[2];pid_t child_pid;int status;long long start_ns,end_ns;
@@ -35,6 +44,7 @@ int main(int argc,char**argv){
     uint8_t file_hash[32];char file_hash_hex[65];char audit_path[4096];
     const char*exe_name;
     if(parse_args(argc,argv,&cfg,&self_hash_hex)<0)return 1;
+    {int r=do_self_hash(self_hash_hex);if(r<0){return r==-2?3:2;}}
     exe_name=strrchr(cfg.exec_path,'/');exe_name=exe_name?exe_name+1:cfg.exec_path;
     snprintf(audit_path,sizeof(audit_path),"build/audits/%s.audit.json",exe_name);
     audit=axiom_audit_open(audit_path);
