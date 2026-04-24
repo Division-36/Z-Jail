@@ -1,0 +1,14 @@
+.TH Z_JAIL 1 "2026-04-23" "Z-Jail/v1" "User Commands"
+.SH NAME
+z_jail \- multi-layer sandbox for native code execution
+.SH SYNOPSIS
+.B z_jail
+\fB\-\-root\fR=\fIpath\fR [\fB\-\-seccomp\-enforce\fR] [\fB\-\-self\-hash\fR] \fB\-\-\fR \fIprogram\fR [\fIargs...\fR]
+.SH DESCRIPTION
+Z-Jail applies 7 defence-in-depth layers: Truthimatics, namespaces,
+pivot_root, capability drop, NO_NEW_PRIVS, seccomp-BPF, and audit.
+.SH OPTIONS
+\fB\-\-root\fR=\fIpath\fR       sandbox root filesystem
+\fB\-\-seccomp\-enforce\fR     enable seccomp-BPF whitelist
+\fB\-\-self\-hash\fR           verify binary integrity before execution
+\fB\-\-version\fR             show build ID
