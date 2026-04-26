@@ -1,0 +1,5 @@
+# Coverage build
+CC=gcc
+CFLAGS=-O0 -g --coverage -fprofile-arcs -ftest-coverage -Iinclude
+LDFLAGS=--coverage
+include Makefile
