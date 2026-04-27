@@ -1,0 +1,3 @@
+# Happy path evidence patterns
+chroot:blocked,cap_drop:ok,seccomp:ok
+chroot:blocked,cap_drop:ok,seccomp:ok,pivot_root:ok
