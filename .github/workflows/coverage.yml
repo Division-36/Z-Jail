@@ -1,0 +1,9 @@
+name: coverage
+on: [push]
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - run: make -f Makefile.coverage && make -C tests setup
+    - run: bash tests/run_tests.sh
