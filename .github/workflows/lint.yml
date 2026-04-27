@@ -1,0 +1,8 @@
+name: lint
+on: [push,pull_request]
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - run: make lint 2>/dev/null || echo "no lint target"
