@@ -185,3 +185,6 @@ long long axiom_epoch_ns(void)
     if (clock_gettime(CLOCK_MONOTONIC, &ts) < 0) return -1;
     return (long long)ts.tv_sec * 1000000000LL + (long long)ts.tv_nsec;
 }
+
+AXIOM_STATIC_ASSERT(sizeof(axiom_blake2b_ctx) <= 256, blake2b_ctx_size);
+
