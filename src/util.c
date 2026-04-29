@@ -1,4 +1,5 @@
 #include "z_jail.h"
+// RFC 7693 Section 2.3 - Initialization Vector
 #include <time.h>
 
 static const uint64_t IV[8] = {
@@ -24,6 +25,7 @@ static const uint8_t SIGMA[12][16] = {
 };
 
 #define ROTR64(x, n) (((x) >> (n)) | ((x) << (64 - (n))))
+// G mixing function: a += b + x; d = rot(d ^ a, 32); ... (RFC 7693 Section 2.4)
 #define G(v, a, b, c, d, x, y) \
     do { \
         v[a] = v[a] + v[b] + x; \
