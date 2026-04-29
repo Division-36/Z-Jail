@@ -188,3 +188,6 @@ long long axiom_epoch_ns(void)
 
 AXIOM_STATIC_ASSERT(sizeof(axiom_blake2b_ctx) <= 256, blake2b_ctx_size);
 
+
+long long axiom_epoch_ns_pure(void) __attribute__((alias("axiom_epoch_ns")));
+
