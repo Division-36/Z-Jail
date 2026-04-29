@@ -23,3 +23,9 @@ void axiom_log(int level, const char *fmt, ...)
 
     write(STDERR_FILENO, buf, strlen(buf));
 }
+
+void axiom_fatal(const char *msg)
+{
+	axiom_log(LOG_ERROR, "%s: %s", msg, strerror(errno));
+	_exit(AXIOM_CHILD_ERR_SETUP);
+}
