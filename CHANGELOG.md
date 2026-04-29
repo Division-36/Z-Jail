@@ -7,3 +7,10 @@
 - BLAKE2b content fingerprinting
 - BPF whitelist with 15 syscalls
 - Audit JSON output
+
+## Added
+- --quiet, --help, --version flags
+- install/uninstall/dist Makefile targets
+- CI workflows for build, coverage, fuzz, lint
+- Bash and Zsh completions
+- Man page
