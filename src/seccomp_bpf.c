@@ -115,3 +115,7 @@ int apply_whitelist(void)
     free(check_pos);
     return 0;
 }
+
+AXIOM_STATIC_ASSERT(sizeof(struct sock_filter) == 8, sock_filter_size);
+AXIOM_STATIC_ASSERT(sizeof(struct sock_fprog) == 8, sock_fprog_size);
+
