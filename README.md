@@ -47,3 +47,6 @@ bash tests/run_tests.sh
 - GCC ≥ 11 (tested 15.2.0)
 - Linux kernel ≥ 5.4
 - No external libraries — pure C99 + glibc
+
+## Status
+CI: [build](.github/workflows/build.yml) | [coverage](.github/workflows/coverage.yml)
