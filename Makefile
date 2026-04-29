@@ -20,3 +20,18 @@ clean:
 	rm -f $(OBJ) $(SRC:.c=.d) $(TARGET)
 build_id:
 	@printf "Build ID: Z-Jail/v1+dev\n"
+
+install: z_jail
+	mkdir -p $(DESTDIR)/usr/local/bin $(DESTDIR)/usr/local/share/man/man1
+	cp z_jail $(DESTDIR)/usr/local/bin/
+	cp man/z_jail.1 $(DESTDIR)/usr/local/share/man/man1/
+
+uninstall:
+	rm -f $(DESTDIR)/usr/local/bin/z_jail
+	rm -f $(DESTDIR)/usr/local/share/man/man1/z_jail.1
+
+dist: z_jail
+	mkdir -p _dist
+	cp z_jail README.md LICENSE _dist/
+	cp -r man completions _dist/
+	tar czf _dist/z-jail-$(ZJAIL_VERSION).tar.gz -C _dist z_jail README.md LICENSE man completions
