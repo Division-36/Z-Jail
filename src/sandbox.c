@@ -39,6 +39,13 @@ static int drop_caps(void)
     return 0;
 }
 
+//
+// child_run: apply sandbox layers in dependency order.
+// 1. setrlimit  2. fd scrub  3. dumpable=0
+// 4. pivot_root (needs CAP_SYS_ADMIN)
+// 5. NO_NEW_PRIVS  6. drop_caps (capset needs CAP_SETPCAP)
+// 7. seccomp (needs prctl/seccomp)  8. signal parent  9. execve
+//
 int child_run(void *arg)
 {
     sandbox_config *cfg = (sandbox_config *)arg;
