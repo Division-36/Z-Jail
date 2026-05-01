@@ -4,6 +4,10 @@
 #include <linux/securebits.h>
 #include <linux/limits.h>
 
+// pivot_root recipe:
+// 1. mkdir .pivot_old  2. bind mount new_root
+// 3. pivot_root(new_root, .pivot_old)  4. chdir("/")
+// 5. MNT_DETACH .pivot_old  6. rmdir
 static int pivot_into(const char *new_root)
 {
     char put_old[PATH_MAX];
