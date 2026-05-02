@@ -41,3 +41,12 @@ pre-commit-check:
 	@grep -rn "        " include/ src/ --include="*.c" --include="*.h" | grep -v "Binary" || true
 	@echo "OK"
 
+
+check: z_jail
+	@echo "Running smoke check..."
+	./z_jail --version 2>&1 | head -1
+	@echo "OK"
+
+valgrind-check: z_jail
+	valgrind --leak-check=full --error-exitcode=1 ./z_jail --version 2>&1 || echo "valgrind not available"
+
