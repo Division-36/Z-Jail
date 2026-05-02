@@ -1,0 +1,4 @@
+#!/bin/bash
+# Commit message hook
+COMMIT_MSG="$1"
+if [ ! -s "$COMMIT_MSG" ]; then echo "Empty commit message"; exit 1; fi

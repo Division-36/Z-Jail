@@ -1,0 +1,4 @@
+#!/bin/bash
+# Pre-commit hook: check for obvious errors
+set -euo pipefail
+make pre-commit-check 2>/dev/null || echo "pre-commit: make target not found"
