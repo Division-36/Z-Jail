@@ -1,0 +1,1 @@
+{ "root": "./roots/hello", "seccomp_enforce": true, "timeout_sec": 30, "as_limit_mb": 256 }
