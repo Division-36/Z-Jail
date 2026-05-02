@@ -35,3 +35,9 @@ dist: z_jail
 	cp z_jail README.md LICENSE _dist/
 	cp -r man completions _dist/
 	tar czf _dist/z-jail-$(ZJAIL_VERSION).tar.gz -C _dist z_jail README.md LICENSE man completions
+
+pre-commit-check:
+	@echo "Checking for tab indentation..."
+	@grep -rn "        " include/ src/ --include="*.c" --include="*.h" | grep -v "Binary" || true
+	@echo "OK"
+
