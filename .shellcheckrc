@@ -1,0 +1,4 @@
+{
+  "severity": "warning",
+  "exclude": [1091, 2034]
+}
