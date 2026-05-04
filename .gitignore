@@ -8,3 +8,4 @@ fuzz/fuzz_bpf
 *.gcda
 *.gcno
 *.gcov
+.githooks/
