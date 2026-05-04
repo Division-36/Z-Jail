@@ -14,3 +14,9 @@
 - CI workflows for build, coverage, fuzz, lint
 - Bash and Zsh completions
 - Man page
+
+## Added (May)
+- ADR documents (001-004), Roadmap, TODO, HISTORY
+- Git hooks, CI workflows, Dockerfile
+- Fish completions, more examples
+- check, valgrind-check targets
