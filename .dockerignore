@@ -1,0 +1,5 @@
+build/
+_build/
+.git/
+*.o
+*.d
