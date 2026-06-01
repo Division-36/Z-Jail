@@ -20,3 +20,9 @@
 - Git hooks, CI workflows, Dockerfile
 - Fish completions, more examples
 - check, valgrind-check targets
+
+## [v1] - 2026-06-03
+### Final
+- 135+ commits across 6 weeks of development
+- 17 test scenarios, CI workflows, docs, scripts
+- Zero external dependencies, ~130 KiB binary
