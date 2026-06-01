@@ -9,3 +9,4 @@ fuzz/fuzz_bpf
 *.gcno
 *.gcov
 .githooks/
+_benchmarks/reports/
