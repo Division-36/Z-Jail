@@ -50,3 +50,5 @@ check: z_jail
 valgrind-check: z_jail
 	valgrind --leak-check=full --error-exitcode=1 ./z_jail --version 2>&1 || echo "valgrind not available"
 
+
+# Release: v1 (2026-06-03)
