@@ -1,0 +1,8 @@
+name: deps
+on: [pull_request]
+jobs:
+  deps:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - run: grep -r '#include' src/ include/ | grep -v 'z_jail.h' | sort -u | head -20

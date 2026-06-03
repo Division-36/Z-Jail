@@ -4,6 +4,10 @@
 #include <linux/securebits.h>
 #include <linux/limits.h>
 
+// pivot_root recipe:
+// 1. mkdir .pivot_old  2. bind mount new_root
+// 3. pivot_root(new_root, .pivot_old)  4. chdir("/")
+// 5. MNT_DETACH .pivot_old  6. rmdir
 static int pivot_into(const char *new_root)
 {
     char put_old[PATH_MAX];
@@ -39,6 +43,13 @@ static int drop_caps(void)
     return 0;
 }
 
+//
+// child_run: apply sandbox layers in dependency order.
+// 1. setrlimit  2. fd scrub  3. dumpable=0
+// 4. pivot_root (needs CAP_SYS_ADMIN)
+// 5. NO_NEW_PRIVS  6. drop_caps (capset needs CAP_SETPCAP)
+// 7. seccomp (needs prctl/seccomp)  8. signal parent  9. execve
+//
 int child_run(void *arg)
 {
     sandbox_config *cfg = (sandbox_config *)arg;

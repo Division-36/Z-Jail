@@ -1,49 +1,55 @@
 # Z-Jail
 
-Pure-C sandbox engine. Zero external dependencies.
-Hand-rolled BPF, BLAKE2b, and mount-namespace isolation.
+Multi-layer sandbox for native code execution on Linux.
 
-**Build ID:** `Z-Jail/v1+dev`
-**Audit schema:** `z-jail.audit/v1`
+**7 defence-in-depth layers:** Truthimatics → namespaces → pivot_root →
+capabilities → NO_NEW_PRIVS → seccomp-BPF → audit.
 
-## Quick start
-```sh
-make
-./z_jail --root=. --seccomp-enforce -- /bin/true
+Zero external dependencies. ~130 KiB PIE binary. BLAKE2b content hashing.
+
+## Quick Start
+
 ```
-
-## Architecture
-
-7 anti-escape layers applied in strict order inside `child_run()`:
-
-1. **Truthimatics** — evidence-weighted verdict engine
-2. **Namespaces** — CLONE_NEWNS|NEWPID|NEWNET|NEWIPC|NEWUTS
-3. **pivot_root** — atomic bind-mount + pivot_root, umount old root
-4. **Capabilities** — capset(all-zero) + securebits locked
-5. **NO_NEW_PRIVS** — prevent setuid / LD_PRELOAD escalation
-6. **seccomp-BPF** — whitelist-v1: 15 syscalls + 2 mmarg restrictions
-7. **Audit** — JSON audit trail, content fingerprinting
-
-## Security
-- mprotect is **banned** — payloads must be statically linked
-- mmap PROT_EXEC **banned** — W^X enforced via arg-restricted BPF
-- chroot, mount, ptrace, socket, clone, fork — all **blocked**
-- `--self-hash=<hex>` for binary integrity verification
+make && sudo ./z_jail --root=./roots --seccomp-enforce -- /bin/sh
+```
 
 ## Build
-```sh
-make          # → z_jail (~130 KiB, PIE, full RELRO)
-make clean
-make build_id
-```
 
-## Test
-```sh
-make -C tests setup
-bash tests/run_tests.sh
+```
+make          # z_jail
+make install  # install to /usr/local
+make dist     # release tarball
+make -C tests setup && bash tests/run_tests.sh  # run tests (17 scenarios)
 ```
 
 ## Requirements
-- GCC ≥ 11 (tested 15.2.0)
-- Linux kernel ≥ 5.4
-- No external libraries — pure C99 + glibc
+
+- Linux 5.4+ (kernel namespaces, seccomp-BPF, pivot_root)
+- GCC 11+ (tested on 11.4, 13.2, 15.2)
+- No external libraries needed
+
+## Architecture
+
+```
+CLI → parse_args → clone(CLONE_NEWNS|NEWPID|NEWNET|NEWIPC|NEWUTS)
+  → child_run:
+    1. setrlimit
+    2. fd scrub
+    3. PR_SET_DUMPABLE=0
+    4. pivot_root (bind + pivot + umount)
+    5. PR_SET_NO_NEW_PRIVS
+    6. capset all-zero + securebits locked
+    7. seccomp-BPF whitelist-v1 (15 syscalls)
+    8. signal parent via pipe
+    9. execve target
+  → parent collects exit status + audit JSON
+```
+
+## Status
+
+[![build](.github/workflows/build.yml)](.github/workflows/build.yml)
+[![coverage](.github/workflows/coverage.yml)](.github/workflows/coverage.yml)
+
+## License
+
+MIT

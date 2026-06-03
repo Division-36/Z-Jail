@@ -44,3 +44,11 @@ int axiom_audit_close(axiom_audit *audit)
     free(audit);
     return 0;
 }
+
+// ISO 8601 timestamp with timezone offset
+void axiom_audit_timestamp(char *buf, size_t size, long long ns) {
+    struct tm tm;
+    time_t sec = (time_t)(ns / 1000000000LL);
+    localtime_r(&sec, &tm);
+    strftime(buf, size, "%Y-%m-%dT%H:%M:%S%z", &tm);
+}

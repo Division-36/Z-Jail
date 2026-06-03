@@ -1,5 +1,7 @@
 #include "z_jail.h"
 
+// Add evidence to chain. If weight exceeds threshold,
+// the link verdict overrides the chain verdict.
 int axiom_evidence_add_fn(axiom_evidence_chain *chain,
     const char *id, axiom_weight weight,
     axiom_evidence_fn fn, void *ctx, const char *target)
@@ -35,6 +37,8 @@ int axiom_evidence_add_fn(axiom_evidence_chain *chain,
     return 0;
 }
 
+// Evaluate chain: majority-weighted evidence wins.
+// Any REJECT evidence immediately flips the chain.
 int axiom_truthimatics_eval(axiom_evidence_chain *chain,
     const char *target)
 {

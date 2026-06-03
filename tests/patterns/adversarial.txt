@@ -1,0 +1,3 @@
+# Adversarial evidence patterns
+chroot:ok,ptrace:ok,socket:ok
+chroot:ok,cap_drop:fail
