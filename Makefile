@@ -1,7 +1,7 @@
 CC := gcc
 CFLAGS := -O2 -g -fstack-protector-strong -D_FORTIFY_SOURCE=2
 CFLAGS += -fPIC -fno-strict-aliasing -Werror=implicit-function-declaration
-CFLAGS += -Wall -Wextra -Wpedantic -std=c11 -I include
+CFLAGS += -Wall -Wextra -std=gnu11 -I include
 LDFLAGS := -Wl,-z,now -Wl,-z,relro -pie  # RELRO + PIE hardening
 
 SRC := src/log.c src/util.c src/truthimatics.c src/seccomp_bpf.c
