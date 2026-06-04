@@ -6,7 +6,7 @@ PAYLOADS:=hello_static payload_chroot_escape payload_cpu_exhaust\
   payload_mmap_prot_exec payload_mmap_self_modify payload_mount_replay\
   payload_ptrace payload_signal_parent payload_socket
 .PHONY:all clean setup
-all: build/.stamp $(PAYLOADS) blake2b_known
+all: build/.stamp $(PAYLOADS) blake2b_known seccomp_filter_test
 build/.stamp:
 	mkdir -p build
 	touch $@
@@ -14,6 +14,8 @@ $(PAYLOADS):%:%.c
 	$(CC) $(CFLAGS) -o build/$@ $<
 blake2b_known:blake2b_known.c ../src/util.c
 	$(CC) $(CFLAGS) -o build/blake2b_known blake2b_known.c ../src/util.c
+seccomp_filter_test:seccomp_filter_test.c ../src/seccomp_bpf.c ../src/log.c
+	$(CC) $(CFLAGS) -o build/seccomp_filter_test seccomp_filter_test.c ../src/seccomp_bpf.c ../src/log.c
 setup:all
 	for d in hello jail empty execve fd_inh mmap_bad mmap_good mmap_protexec mmap_self ptrace socket chroot dbl_chroot mount cpu_exh signal self_hash_match self_hash_mismatch; do mkdir -p "build/roots/$$d/bin"; done
 	cp build/hello_static build/roots/hello/bin/

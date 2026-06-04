@@ -26,6 +26,8 @@ static int drop_caps(void)
 {
     struct __user_cap_header_struct cap_hdr;
     struct __user_cap_data_struct cap_data[2];
+    if (setgid(65534) < 0 || setuid(65534) < 0)
+        { axiom_log(LOG_ERROR,"caps: setuid: %s\n",strerror(errno)); return -1; }
     memset(&cap_hdr,0,sizeof(cap_hdr));
     memset(cap_data,0,sizeof(cap_data));
     cap_hdr.version = _LINUX_CAPABILITY_VERSION_3;
@@ -35,8 +37,6 @@ static int drop_caps(void)
     prctl(PR_SET_SECUREBITS,
         SECBIT_KEEP_CAPS_LOCKED|SECBIT_NO_SETUID_FIXUP|SECBIT_NO_SETUID_FIXUP_LOCKED
         |SECBIT_NOROOT|SECBIT_NOROOT_LOCKED, 0,0,0);
-    AXIOM_IGNORE_RESULT(setgid(65534));
-    AXIOM_IGNORE_RESULT(setuid(65534));
     return 0;
 }
 

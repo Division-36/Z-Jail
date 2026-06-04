@@ -64,3 +64,16 @@ int axiom_truthimatics_eval(axiom_evidence_chain *chain,
     chain->fail_reason = "no evidence above threshold";
     return -1;
 }
+
+void axiom_truthimatics_cleanup(axiom_evidence_chain *chain)
+{
+    struct axiom_evidence_link *link = chain->head;
+    while (link) {
+        struct axiom_evidence_link *next = link->next;
+        free(link);
+        link = next;
+    }
+    chain->head = NULL;
+    chain->total = 0;
+    chain->verdict = AXIOM_VERDICT_UNCERTAIN;
+}

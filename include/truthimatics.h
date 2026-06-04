@@ -27,3 +27,4 @@ typedef struct axiom_evidence_chain {
 
 int axiom_truthimatics_eval(axiom_evidence_chain *chain,
     const char *target);
+void axiom_truthimatics_cleanup(axiom_evidence_chain *chain);
