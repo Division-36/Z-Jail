@@ -4,11 +4,11 @@ Multi-layer sandbox for native code execution on Linux. Seven independent defenc
 
 ```text
 ┌──────────────────────────────────────────────────────┐
-│                    Z-Jail                             │
+│                    Z-Jail                            │
 ├──────────────────────────────────────────────────────┤
 │  Truthimatics  (evidence-based verdict engine)       │
-│  Namespaces    (mount, pid, net, ipc, uts)          │
-│  pivot_root    (chroot on steroids)                 │
+│  Namespaces    (mount, pid, net, ipc, uts)           │
+│  pivot_root    (chroot on steroids)                  │
 │  Capabilities  (drop all, lock securebits)           │
 │  NO_NEW_PRIVS  (no privilege escalation)             │
 │  seccomp-BPF   (whitelist: 15 syscalls only)         │
