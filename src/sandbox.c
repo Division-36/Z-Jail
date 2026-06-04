@@ -4,10 +4,6 @@
 #include <linux/securebits.h>
 #include <linux/limits.h>
 
-// pivot_root recipe:
-// 1. mkdir .pivot_old  2. bind mount new_root
-// 3. pivot_root(new_root, .pivot_old)  4. chdir("/")
-// 5. MNT_DETACH .pivot_old  6. rmdir
 static int pivot_into(const char *new_root)
 {
     char put_old[PATH_MAX];
@@ -39,18 +35,11 @@ static int drop_caps(void)
     prctl(PR_SET_SECUREBITS,
         SECBIT_KEEP_CAPS_LOCKED|SECBIT_NO_SETUID_FIXUP|SECBIT_NO_SETUID_FIXUP_LOCKED
         |SECBIT_NOROOT|SECBIT_NOROOT_LOCKED, 0,0,0);
-    {volatile int _q=setgid(65534);(void)_q;}
-    {volatile int _s=setuid(65534);(void)_s;}
+    AXIOM_IGNORE_RESULT(setgid(65534));
+    AXIOM_IGNORE_RESULT(setuid(65534));
     return 0;
 }
 
-//
-// child_run: apply sandbox layers in dependency order.
-// 1. setrlimit  2. fd scrub  3. dumpable=0
-// 4. pivot_root (needs CAP_SYS_ADMIN)
-// 5. NO_NEW_PRIVS  6. drop_caps (capset needs CAP_SETPCAP)
-// 7. seccomp (needs prctl/seccomp)  8. signal parent  9. execve
-//
 int child_run(void *arg)
 {
     sandbox_config *cfg = (sandbox_config *)arg;
@@ -69,7 +58,7 @@ int child_run(void *arg)
     prctl(PR_SET_NO_NEW_PRIVS,1,0,0,0);
     if(drop_caps()<0){_exit(AXIOM_CHILD_ERR_CAP);}
     if(cfg->seccomp_enforce && apply_whitelist()<0){_exit(AXIOM_CHILD_ERR_SECCOMP);}
-    {unsigned char ready=1;volatile ssize_t _w=write(cfg->report_fd,&ready,1);(void)_w;}
+    {unsigned char ready=1;AXIOM_IGNORE_RESULT(write(cfg->report_fd,&ready,1));}
     execve(cfg->exec_path,cfg->exec_argv,cfg->exec_envp);
     _exit(AXIOM_CHILD_ERR_EXEC);
 }

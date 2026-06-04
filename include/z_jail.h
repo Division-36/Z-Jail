@@ -44,6 +44,8 @@ void axiom_log(int level, const char *fmt, ...)
 #define AXIOM_CHILD_ERR_CAP    105
 #define AXIOM_NORETURN __attribute__((noreturn))
 #define AXIOM_UNUSED   __attribute__((unused))
+#define AXIOM_IGNORE_RESULT(expr) \
+	do { volatile __typeof__(expr) _axiom_ign_ = (expr); (void)_axiom_ign_; } while (0)
 #define AXIOM_PRINTF(f,a) __attribute__((format(printf,f,a)))
 #define AXIOM_STATIC_ASSERT(cond, msg) \
 	typedef char AXIOM_UNUSED _axiom_sa_##msg[(cond) ? 1 : -1]

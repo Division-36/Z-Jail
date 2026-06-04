@@ -2,7 +2,7 @@ CC := gcc
 CFLAGS := -O2 -g -fstack-protector-strong -D_FORTIFY_SOURCE=2
 CFLAGS += -fPIC -fno-strict-aliasing -Werror=implicit-function-declaration
 CFLAGS += -Wall -Wextra -std=gnu11 -I include
-LDFLAGS := -Wl,-z,now -Wl,-z,relro -pie  # RELRO + PIE hardening
+LDFLAGS := -Wl,-z,now -Wl,-z,relro -pie
 
 SRC := src/log.c src/util.c src/truthimatics.c src/seccomp_bpf.c
 SRC += src/audit.c src/sandbox.c src/z_jail.c
@@ -47,8 +47,21 @@ check: z_jail
 	./z_jail --version 2>&1 | head -1
 	@echo "OK"
 
+test: z_jail
+	$(MAKE) -C tests setup >/dev/null 2>&1
+	bash tests/run_tests.sh
+
+help:
+	@echo "Targets:"
+	@echo "  make          - build z_jail"
+	@echo "  make clean    - remove build artifacts"
+	@echo "  make check    - smoke test (--version)"
+	@echo "  make test     - run full test suite (17 scenarios)"
+	@echo "  make install  - install to \$$DESTDIR/usr/local"
+	@echo "  make dist     - create release tarball"
+	@echo "  make help     - show this message"
+
 valgrind-check: z_jail
 	valgrind --leak-check=full --error-exitcode=1 ./z_jail --version 2>&1 || echo "valgrind not available"
 
 
-# Release: v1 (2026-06-03)

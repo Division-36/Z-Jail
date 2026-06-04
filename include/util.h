@@ -1,4 +1,5 @@
 #pragma once
+#include <stdint.h>
 #define AXIOM_BLAKE2B_OUT_LEN 32
 #define AXIOM_BLAKE2B_BLOCK_LEN 128
 typedef struct {
