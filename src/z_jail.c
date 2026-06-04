@@ -57,7 +57,7 @@ int main(int argc,char**argv){
     start_ns=axiom_epoch_ns();
     child_pid=clone(child_run,(char*)child_stack+CHILD_STACK_SIZE,
         CLONE_NEWNS|CLONE_NEWPID|CLONE_NEWNET|CLONE_NEWIPC|CLONE_NEWUTS|SIGCHLD,&cfg);
-    if(child_pid<0){perror("clone");free(child_stack);return 1;}
+    if(child_pid<0){fprintf(stderr,"z_jail: namespace creation (clone) failed: %s (try running as root, or your kernel may lack CONFIG_*_NS)\n",strerror(errno));close(pipe_fds[0]);close(pipe_fds[1]);free(child_stack);return 125;}
     close(pipe_fds[1]);cfg.report_fd=-1;
     {char ready=0;AXIOM_IGNORE_RESULT(read(pipe_fds[0],&ready,1));}close(pipe_fds[0]);
     waitpid(child_pid,&status,0);free(child_stack);end_ns=axiom_epoch_ns();

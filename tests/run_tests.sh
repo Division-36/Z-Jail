@@ -7,6 +7,7 @@ pass() { P=$((P+1)); msg "$1" "PASS"; }
 fail() { F=$((F+1)); msg "$1" "FAIL"; echo "$2"; }
 skip() { S=$((S+1)); msg "$1" "SKIP"; }
 pe() { "$Z" --root="$1" --seccomp-enforce -- "$2" 2>/dev/null; return $?; }
+skip_if() { local e=$1; [ "$e" = "125" ] && { skip "$2"; return 0; }; return 1; }
 echo "=== Z-Jail Test Suite ==="
 make -C "$SELF" setup>/dev/null 2>&1;mkdir -p "$D/audits"
 test_b2b() {
@@ -15,10 +16,12 @@ test_b2b() {
 }
 test_ok() {
   pe "$2" "$3"; local e=$?
+  skip_if "$e" "$1" && return
   if [[ $e -eq 0 || $e -eq 3 ]]; then pass "$1"; else fail "$1" "ec=$e"; fi
 }
 test_killed() {
   pe "$2" "$3"; local e=$?
+  skip_if "$e" "$1" && return
   if [[ $e -ne 0 ]]; then pass "$1"; else fail "$1" "ec=$e (should be killed)"; fi
 }
 test_b2b  "scenario 0: blake2b_regress"
@@ -28,9 +31,9 @@ test_sec() {
 }
 test_sec "scenario 1: seccomp_filter"
 test_ok   "scenario 2: hello_static"     "$D/roots/hello"   bin/hello_static
-skip      "scenario 3: hello_dynamic"
+test_ok   "scenario 3: hello_dynamic"   "$D/roots/hello_dynamic" bin/hello_dynamic
 test_ok   "scenario 4: execve_replacement" "$D/roots/execve" bin/payload_execve_replacement
-skip      "scenario 5: fd_inherited_read"
+test_ok   "scenario 5: fd_inherited_read" "$D/roots/fd_inh" bin/payload_fd_inherited_read_dyn
 test_killed "scenario 6: mmap_bad_flags" "$D/roots/mmap_bad" bin/payload_mmap_bad_flags
 test_ok   "scenario 7: mmap_good_allowed" "$D/roots/mmap_good" bin/payload_mmap_good
 test_killed "scenario 8: mmap_prot_exec" "$D/roots/mmap_protexec" bin/payload_mmap_prot_exec
