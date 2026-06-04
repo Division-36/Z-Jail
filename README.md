@@ -437,7 +437,9 @@ Latency breakdown (approx): clone + namespaces ~3 ms, pivot_root ~2 ms, seccomp 
 
 ## License
 
-MIT. See `LICENSE` for the full text.
+**Axiom Public License v1.0** — see `LICENSE` for the full text.
+
+Free for independent researchers and small-scale laboratories (budget ≤ $1M USD). Commercial use, government use, and reverse engineering are strictly prohibited without written authorization.
 
 ---
 
