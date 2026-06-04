@@ -1,28 +1,36 @@
 # Changelog
 
-## [v1] - 2026-06-03
+## [v1] - 2026-06-04
+
 ### Added
 - 7-layer sandbox: Truthimatics, namespaces, pivot_root, caps,
   NO_NEW_PRIVS, seccomp-BPF, audit
-- BLAKE2b content fingerprinting
-- BPF whitelist with 15 syscalls
-- Audit JSON output
+- BLAKE2b content fingerprinting (RFC 7693)
+- BPF whitelist with 15 syscalls + arg restrictions for mmap
+- Audit JSON output (`z-jail.audit/v1`)
+- `--quiet`, `--help`, `--version` CLI flags
+- install / uninstall / dist Makefile targets
+- check / valgrind-check targets
+- CI workflows: build, coverage, fuzz, lint, weekly, release
+- bash, zsh, and fish shell completions
+- Man page (`man/z_jail.1`)
+- ADR documents (001–004)
+- 17 test scenarios (standalone + sandbox)
+- Release signing placeholder
 
-## Added
-- --quiet, --help, --version flags
-- install/uninstall/dist Makefile targets
-- CI workflows for build, coverage, fuzz, lint
-- Bash and Zsh completions
-- Man page
+### Changed
+- Project renamed from Axiom-Jail to Z-Jail
+- Rewritten BPF filter: KILL at end, nr chaining, arg jumps to KILL
+- Test infrastructure: proper exit-code capture, standalone seccomp test
+- Sandbox: setuid/setgid before capset fix
+- Clone error handling: exit code 125, pipe fd leak fix
 
-## Added (May)
-- ADR documents (001-004), Roadmap, TODO, HISTORY
-- Git hooks, CI workflows, Dockerfile
-- Fish completions, more examples
-- check, valgrind-check targets
+### Documentation
+- README with architecture diagram, comparison table, layer descriptions
+- docs/: ARCHITECTURE, SANDBOX, SECCOMP, AUDIT_SCHEMA, THREAT_MODEL,
+  BLAKE2B, BENCHMARKS, BUILD
+- Git hooks, Dockerfile
 
-## [v1] - 2026-06-03
-### Final
-- 135+ commits across 6 weeks of development
-- 17 test scenarios, CI workflows, docs, scripts
-- Zero external dependencies, ~130 KiB binary
+---
+
+~135 commits across 6 weeks. Zero external dependencies, ~130 KiB binary.

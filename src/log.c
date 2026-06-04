@@ -21,7 +21,7 @@ void axiom_log(int level, const char *fmt, ...)
     vsnprintf(buf + n, sizeof(buf) - (size_t)n, fmt, ap);
     va_end(ap);
 
-    write(STDERR_FILENO, buf, strlen(buf));
+    AXIOM_IGNORE_RESULT(write(STDERR_FILENO, buf, strlen(buf)));
 }
 
 void axiom_fatal(const char *msg)

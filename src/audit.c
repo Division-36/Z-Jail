@@ -32,8 +32,8 @@ int axiom_audit_write(axiom_audit *audit, const char *table, const char *json)
     int n = snprintf(buf, sizeof(buf), "%s\n", json);
     if (n < 0 || (size_t)n >= sizeof(buf)) return -1;
     ssize_t w = write(audit->fd, buf, (size_t)n);
-    return (w < 0 || (size_t)w != (size_t)n) ? -1 : 0;
     (void)table;
+    return (w < 0 || (size_t)w != (size_t)n) ? -1 : 0;
 }
 
 int axiom_audit_close(axiom_audit *audit)
@@ -45,7 +45,6 @@ int axiom_audit_close(axiom_audit *audit)
     return 0;
 }
 
-// ISO 8601 timestamp with timezone offset
 void axiom_audit_timestamp(char *buf, size_t size, long long ns) {
     struct tm tm;
     time_t sec = (time_t)(ns / 1000000000LL);

@@ -1,5 +1,12 @@
 #include "z_jail.h"
 
+#undef BPF_STMT
+#undef BPF_JUMP
+#define BPF_STMT(code, k) \
+	((struct sock_filter){ (unsigned short)(code), 0, 0, (unsigned int)(k) })
+#define BPF_JUMP(code, k, jt, jf) \
+	((struct sock_filter){ (unsigned short)(code), (unsigned char)(jt), (unsigned char)(jf), (unsigned int)(k) })
+
 seccomp_rule axiom_whitelist[] = {
     {.nr = 0,   .arch = AUDIT_ARCH_X86_64, .arg_count = 0},
     {.nr = 1,   .arch = AUDIT_ARCH_X86_64, .arg_count = 0},
@@ -64,15 +71,12 @@ int apply_whitelist(void)
 
     pos = 0;
     filter[pos++] = BPF_STMT(BPF_LD|BPF_W|BPF_ABS, ARCH_OFFSET);
-    filter[pos++] = BPF_JUMP(BPF_JMP|BPF_JEQ, AUDIT_ARCH_X86_64, 1, 0);
+    filter[pos++] = BPF_JUMP(BPF_JMP|BPF_JEQ, AUDIT_ARCH_X86_64, 0, 0);
 
     for (i = 0; i < axiom_whitelist_size; i++) {
         filter[pos++] = BPF_STMT(BPF_LD|BPF_W|BPF_ABS, NR_OFFSET);
         filter[pos++] = BPF_JUMP(BPF_JMP|BPF_JEQ, (uint32_t)axiom_whitelist[i].nr, 0, 0);
     }
-
-    kill_pos = pos;
-    filter[pos++] = BPF_STMT(BPF_RET, SECCOMP_RET_KILL);
 
     for (i = 0; i < axiom_whitelist_size; i++) {
         check_pos[i] = pos;
@@ -95,15 +99,45 @@ int apply_whitelist(void)
         }
     }
 
+    kill_pos = pos;
+    filter[pos++] = BPF_STMT(BPF_RET, SECCOMP_RET_KILL);
+
+    filter[1].jt = 0;
+    filter[1].jf = (uint8_t)((kill_pos - 2) > 255 ? 255 : (kill_pos - 2));
+
     for (i = 0; i < axiom_whitelist_size; i++) {
         int nr_idx = 2 + i*2 + 1;
         int jt = check_pos[i] - (nr_idx + 1);
-        int jf = kill_pos - (nr_idx + 1);
+        int jf;
+        if (i < axiom_whitelist_size - 1)
+            jf = 1;
+        else
+            jf = kill_pos - (nr_idx + 1);
         filter[nr_idx].jt = (uint8_t)(jt > 255 ? 255 : jt);
         filter[nr_idx].jf = (uint8_t)(jf > 255 ? 255 : jf);
     }
-    filter[1].jt = (uint8_t)((2-(1+1)) > 255 ? 255 : (2-(1+1)));
-    filter[1].jf = (uint8_t)((kill_pos-(1+1)) > 255 ? 255 : (kill_pos-(1+1)));
+
+    pos = 2 + axiom_whitelist_size * 2;
+    for (i = 0; i < axiom_whitelist_size; i++) {
+        pos = check_pos[i];
+        if (axiom_whitelist[i].arg_count > 0) {
+            for (j = 0; j < axiom_whitelist[i].arg_count; j++) {
+                seccomp_arg_rule *r = &axiom_whitelist[i].arg_rules[j];
+                if (r->mask != 0) {
+                    pos += 2;
+                    filter[pos].jf = (uint8_t)((kill_pos - pos - 1) > 255 ? 255 : (kill_pos - pos - 1));
+                    pos++;
+                } else {
+                    pos++;
+                    filter[pos].jf = (uint8_t)((kill_pos - pos - 1) > 255 ? 255 : (kill_pos - pos - 1));
+                    pos++;
+                }
+            }
+            pos++;
+        } else {
+            pos++;
+        }
+    }
 
     prog.len = (unsigned short)total;
     prog.filter = filter;
@@ -117,5 +151,4 @@ int apply_whitelist(void)
 }
 
 AXIOM_STATIC_ASSERT(sizeof(struct sock_filter) == 8, sock_filter_size);
-AXIOM_STATIC_ASSERT(sizeof(struct sock_fprog) == 8, sock_fprog_size);
 
