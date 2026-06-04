@@ -1,21 +1,33 @@
-MIT License
+AXIOM PUBLIC LICENSE
+Version 1.0, May 2026
+Copyright (c) 2026 Ziad Salah (Zierax)
 
-Copyright (c) 2026 Zierax
+TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+1. GRANT OF RIGHTS
+Permission is hereby granted, free of charge, to any Independent Researcher or Small-Scale Laboratory to obtain a copy of this software and associated documentation files (the "Software") and data, to use, copy, modify, and non-sublicensable redistribution of the Software for non-commercial and scholarly purposes, subject to the following conditions:
+- Definition of Small-Scale Laboratory: Any research entity, institution, or laboratory with a total annual operating budget or cumulative external funding not exceeding $1,000,000 USD.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+2. CITATION REQUIREMENT
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. Any use of the Software or Data under Section 1 must include a clear and visible citation to the original author: Ziad Salah (Zierax).
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+3. RESTRICTIONS FOR HIGH-CAPITAL AND GOVERNMENT ENTITIES
+Any entity that does not meet the criteria in Section 1 is strictly prohibited from using, integrating, modifying, or redistributing the Software without prior written and signed authorization from the author. This includes, but is not limited to:
+- Organizations, corporations, or startups with cumulative funding, grants, or investment exceeding $1,000,000 USD.
+- Any government-affiliated entity, including national agencies, military branches, intelligence organizations, or state-funded research institutes.
+
+4. REVERSE ENGINEERING AND COMMERCIAL RESTRICTIONS
+The Author strictly prohibits any attempt to decompile, disassemble, decrypt, extract, or otherwise perform reverse engineering on the Software or its binary/obfuscated versions. Any commercial use, including for-profit research or integration into commercial products, is forbidden without a separate commercial agreement.
+
+5. TERMINATION AND PENALTIES
+5.1. AUTOMATIC TERMINATION: This License and the rights granted hereunder will terminate automatically, without prior notice from the Author, if you fail to comply with any term(s) of this License. This includes, but is not limited to:
+- Misrepresentation: Providing false information regarding an entity's budget to qualify under Section 1.
+- Commercial Misuse: Any direct or indirect use of the Software for profit-generating activities.
+- Reverse Engineering: Any attempt to extract underlying algorithms, "Truthimatics" equations, or proprietary logic from the Software.
+
+5.2. EFFECT OF TERMINATION: Upon termination, you must immediately cease all use of the Software and destroy all copies in your possession. Any use after termination is an act of Willful Copyright Infringement.
+
+5.3. LEGAL CONSEQUENCES: Violation of this License, especially through unauthorized commercial use or reverse engineering, shall entitle the Author to seek maximum Statutory Damages and Injunctive Relief under International Intellectual Property Laws. The Author reserves the right to publicly disclose and name any entity found in violation of these terms.
+
+6. NO WARRANTY
+THE SOFTWARE AND DATA ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
