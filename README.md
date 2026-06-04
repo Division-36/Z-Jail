@@ -38,7 +38,7 @@ Multi-layer sandbox for native code execution on Linux. Seven independent defenc
 ## Quick Start
 
 ```sh
-git clone https://github.com/Zierax/Z-Jail.git
+git clone https://github.com/Division-36/Z-Jail.git
 cd Z-Jail
 make
 sudo ./z_jail --root=/path/to/rootfs --seccomp-enforce -- /bin/ls
@@ -56,7 +56,7 @@ Existing sandboxing solutions make trade-offs:
 |--------------------|-------------|-----------------|------------|-----------|------------|
 | External deps      | **zero**    | libc, seccomp   | Go runtime | libc      | libc, protobuf |
 | Binary size        | **~130 KiB**| 20+ MiB         | 40+ MiB    | ~70 KiB   | ~1 MiB     |
-| VM isolation       | no          | yes             | no         | no        | no         |
+| VM isolation       | no          | yes (microVM)   | no (sandbox)| no        | no        |
 | seccomp whitelist  | **yes**     | no              | yes        | optional  | yes        |
 | Content hashing    | **yes**     | no              | no         | no        | no         |
 | Audit JSON         | **yes**     | no              | yes        | no        | partial    |
@@ -428,6 +428,13 @@ Latency breakdown (approx): clone + namespaces ~3 ms, pivot_root ~2 ms, seccomp 
 
 ---
 
+## Status
+
+[![build](https://github.com/Division-36/Z-Jail/actions/workflows/build.yml/badge.svg)](https://github.com/Division-36/Z-Jail/actions/workflows/build.yml)
+[![coverage](https://github.com/Division-36/Z-Jail/actions/workflows/coverage.yml/badge.svg)](https://github.com/Division-36/Z-Jail/actions/workflows/coverage.yml)
+
+---
+
 ## License
 
 MIT. See `LICENSE` for the full text.
@@ -435,4 +442,4 @@ MIT. See `LICENSE` for the full text.
 ---
 
 *Z-Jail was built on WSL2 (Kali Linux, GCC 15.2.0), targeting Linux 5.4+.*
-*Maintained by [Zierax](https://github.com/Zierax). Report issues at the [issue tracker](https://github.com/Zierax/Z-Jail/issues).*
+*Maintained by [Division-36](https://github.com/Division-36). Report issues at the [issue tracker](https://github.com/Division-36/Z-Jail/issues).*
