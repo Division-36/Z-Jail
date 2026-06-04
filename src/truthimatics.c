@@ -3,7 +3,7 @@
 // Add evidence to chain. If weight exceeds threshold,
 // the link verdict overrides the chain verdict.
 int axiom_evidence_add_fn(axiom_evidence_chain *chain,
-    const char *id, axiom_weight weight,
+    const char *id, axiom_weight weight AXIOM_UNUSED,
     axiom_evidence_fn fn, void *ctx, const char *target)
 {
     struct axiom_evidence_link *link;

@@ -1,5 +1,15 @@
 #include "z_jail.h"
 
+// Redefine BPF_STMT/BPF_JUMP as compound literal expressions.
+// The kernel headers define them as bare brace-groups which are
+// not valid as expressions in C (even gnu11).
+#undef BPF_STMT
+#undef BPF_JUMP
+#define BPF_STMT(code, k) \
+	((struct sock_filter){ (unsigned short)(code), 0, 0, (unsigned int)(k) })
+#define BPF_JUMP(code, k, jt, jf) \
+	((struct sock_filter){ (unsigned short)(code), (unsigned char)(jt), (unsigned char)(jf), (unsigned int)(k) })
+
 seccomp_rule axiom_whitelist[] = {
     {.nr = 0,   .arch = AUDIT_ARCH_X86_64, .arg_count = 0},
     {.nr = 1,   .arch = AUDIT_ARCH_X86_64, .arg_count = 0},

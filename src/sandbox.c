@@ -34,12 +34,13 @@ static int drop_caps(void)
     memset(cap_data,0,sizeof(cap_data));
     cap_hdr.version = _LINUX_CAPABILITY_VERSION_3;
     cap_hdr.pid = 0;
-    if (capset(&cap_hdr,cap_data)<0)
+    if (syscall(SYS_capset, &cap_hdr,cap_data)<0)
         { axiom_log(LOG_ERROR,"caps: capset: %s\n",strerror(errno)); return -1; }
     prctl(PR_SET_SECUREBITS,
         SECBIT_KEEP_CAPS_LOCKED|SECBIT_NO_SETUID_FIXUP|SECBIT_NO_SETUID_FIXUP_LOCKED
         |SECBIT_NOROOT|SECBIT_NOROOT_LOCKED, 0,0,0);
-    setgid(65534); setuid(65534);
+    {volatile int _q=setgid(65534);(void)_q;}
+    {volatile int _s=setuid(65534);(void)_s;}
     return 0;
 }
 
@@ -68,7 +69,7 @@ int child_run(void *arg)
     prctl(PR_SET_NO_NEW_PRIVS,1,0,0,0);
     if(drop_caps()<0){_exit(AXIOM_CHILD_ERR_CAP);}
     if(cfg->seccomp_enforce && apply_whitelist()<0){_exit(AXIOM_CHILD_ERR_SECCOMP);}
-    {unsigned char ready=1;write(cfg->report_fd,&ready,1);}
+    {unsigned char ready=1;volatile ssize_t _w=write(cfg->report_fd,&ready,1);(void)_w;}
     execve(cfg->exec_path,cfg->exec_argv,cfg->exec_envp);
     _exit(AXIOM_CHILD_ERR_EXEC);
 }
