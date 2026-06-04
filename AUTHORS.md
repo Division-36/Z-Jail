@@ -1,2 +1,3 @@
 # Authors
-- Alex Chen <alex@example.com> - initial design and implementation
+
+- Zierax <zs.01117875692@gmail.com> — design and implementation
