@@ -1,8 +1,17 @@
-# Z-Jail
+<div align="center">
+  <img src="assets/zjail.jpg" alt="Z-Jail" width="120"/>
+  <h1>Z-Jail</h1>
+  <p>
+    Multi-layer sandbox for native code execution on Linux.<br/>
+    Seven independent defence layers — no external dependencies, ~130 KiB PIE binary.
+  </p>
+  <img src="https://img.shields.io/badge/platform-Linux%205.4%2B-blue?style=flat-square"/>
+  <img src="https://img.shields.io/badge/language-C99-lightgrey?style=flat-square"/>
+  <img src="https://img.shields.io/badge/license-Axiom%20Public%20v1.0-red?style=flat-square"/>
+  <img src="https://img.shields.io/badge/size-~130%20KiB-green?style=flat-square"/>
+</div>
 
-![Z-Jail](assets/zjail.jpg)
-
-Multi-layer sandbox for native code execution on Linux. Seven independent defence layers stack to contain untrusted binaries — no external dependencies, ~130 KiB PIE binary.
+---
 
 ```text
 ┌──────────────────────────────────────────────────────┐
