@@ -1,5 +1,7 @@
 # Z-Jail
 
+![Z-Jail](assets/zjail.jpg)
+
 Multi-layer sandbox for native code execution on Linux. Seven independent defence layers stack to contain untrusted binaries — no external dependencies, ~130 KiB PIE binary.
 
 ```text
