@@ -17,7 +17,7 @@
 ┌──────────────────────────────────────────────────────┐
 │                    Z-Jail                            │
 ├──────────────────────────────────────────────────────┤
-│  Truthimatics  (evidence-based verdict engine)       │
+│  Truthimatics Public Version  (evidence-based verdict engine)       │
 │  Namespaces    (mount, pid, net, ipc, uts)           │
 │  pivot_root    (chroot on steroids)                  │
 │  Capabilities  (drop all, lock securebits)           │
@@ -136,7 +136,7 @@ sequenceDiagram
 
 ## Layers
 
-### 1. Truthimatics
+### 1. Truthimatics Public Version
 Evidence-based verdict engine. Collects weighted observations about the executed binary and determines a final verdict (`DETERMINISTIC`, `REJECT`, or `UNCERTAIN`). Each observation carries a weight; any single observation with weight >50% of total decides the verdict.
 
 ### 2. Namespaces

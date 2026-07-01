@@ -3,7 +3,7 @@
 ## [v1] - 2026-06-04
 
 ### Added
-- 7-layer sandbox: Truthimatics, namespaces, pivot_root, caps,
+- 7-layer sandbox: Truthimatics Public Version, namespaces, pivot_root, caps,
   NO_NEW_PRIVS, seccomp-BPF, audit
 - BLAKE2b content fingerprinting (RFC 7693)
 - BPF whitelist with 15 syscalls + arg restrictions for mmap

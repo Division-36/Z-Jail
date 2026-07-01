@@ -2,7 +2,7 @@
 ## Context
 Single sandbox mechanisms can be bypassed.
 ## Decision
-Stack 7 independent layers: Truthimatics, namespaces, pivot_root,
+Stack 7 independent layers: Truthimatics Public Version, namespaces, pivot_root,
 capabilities, NO_NEW_PRIVS, seccomp-BPF, audit.
 ## Consequences
 + Defence-in-depth: bypassing one layer doesn't escape the sandbox
