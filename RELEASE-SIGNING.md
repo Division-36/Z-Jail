@@ -5,15 +5,13 @@ v1 release artifacts are signed with [minisign](https://jedisct1.github.io/minis
 ## Public Key
 
 ```
-RWR—————————————————————————————————————
+RWTC0j7RhnUtpjGbhcm/dKRiz8k8IW4z069gZZzhhjbAokPenWYgVliH
 ```
-
-*Key fingerprint not yet established. Will be published here and on key servers.*
 
 ## Verification
 
 ```sh
-minisign -Vm z-jail-v1.tar.gz -P "RWR—————————————————————————————————————"
+minisign -Vm z-jail-v1.tar.gz -P "RWTC0j7RhnUtpjGbhcm/dKRiz8k8IW4z069gZZzhhjbAokPenWYgVliH"
 ```
 
 ## Signing Process

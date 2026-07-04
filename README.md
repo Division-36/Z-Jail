@@ -7,7 +7,7 @@
   </p>
   <img src="https://img.shields.io/badge/platform-Linux%205.4%2B-blue?style=flat-square"/>
   <img src="https://img.shields.io/badge/language-C99-lightgrey?style=flat-square"/>
-  <img src="https://img.shields.io/badge/license-Axiom%20Public%20v1.0-red?style=flat-square"/>
+  <img src="https://img.shields.io/badge/license-MIT-red?style=flat-square"/>
   <img src="https://img.shields.io/badge/size-~130%20KiB-green?style=flat-square"/>
 </div>
 
@@ -17,13 +17,13 @@
 ┌──────────────────────────────────────────────────────┐
 │                    Z-Jail                            │
 ├──────────────────────────────────────────────────────┤
-│  Truthimatics Public Version  (evidence-based verdict engine)       │
-│  Namespaces    (mount, pid, net, ipc, uts)           │
-│  pivot_root    (chroot on steroids)                  │
-│  Capabilities  (drop all, lock securebits)           │
-│  NO_NEW_PRIVS  (no privilege escalation)             │
-│  seccomp-BPF   (whitelist: 15 syscalls only)         │
-│  Audit         (JSON logging + BLAKE2b hashing)      │
+│  Truthimatics PV  (evidence-based verdict engine)    │
+│  Namespaces       (mount, pid, net, ipc, uts)        │
+│  pivot_root       (chroot on steroids)               │
+│  Capabilities     (drop all, lock securebits)        │
+│  NO_NEW_PRIVS     (no privilege escalation)          │
+│  seccomp-BPF      (whitelist: 15 syscalls only)      │
+│  Audit            (JSON logging + BLAKE2b hashing)   │
 └──────────────────────────────────────────────────────┘
 ```
 
@@ -448,9 +448,7 @@ Latency breakdown (approx): clone + namespaces ~3 ms, pivot_root ~2 ms, seccomp 
 
 ## License
 
-**Axiom Public License v1.0** — see `LICENSE` for the full text.
-
-Free for independent researchers and small-scale laboratories (budget ≤ $1M USD). Commercial use, government use, and reverse engineering are strictly prohibited without written authorization.
+**MIT** — see `LICENSE` for the full text.
 
 ---
 

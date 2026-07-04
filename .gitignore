@@ -10,3 +10,4 @@ fuzz/fuzz_bpf
 *.gcov
 .githooks/
 _benchmarks/reports/
+.release-key
