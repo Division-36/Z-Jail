@@ -1,33 +1,38 @@
 # seccomp-BPF whitelist-v1
-15 syscalls: read,write,openat,close,lseek,brk,mmap(arg),munmap,execve,
-exit_group,rt_sigaction,rt_sigprocmask,getrandom,clock_gettime,fstat
-mmap: flags==0x22 AND (prot&4)==0
-DS1
-cat > docs/AUDIT_SCHEMA.md << 'DAS1'
-# Audit Schema z-jail.audit/v1
-Fields: schema,build_id,timestamp,duration_ns,executable,verdict,
-exit_code,sandbox{filter,whitelist_size,arg_rules_size,namespaces,
-pivot_root,no_new_privs,capabilities_dropped},content_fingerprint
-DAS1
-cat > docs/THREAT_MODEL.md << 'DTM1'
-# Threat Model
-In scope: native code exec, chroot/mount/ptrace/socket escapes, fork bombs
-Out of scope: kernel zero-days, side channels, network egress
-DTM1
-cat > docs/BLAKE2B.md << 'DB21'
-# BLAKE2b
-RFC 7693, ~2x SHA-256 speed, ~120 LoC
-Streaming: init/update/final, 32-byte digest
-Vectors: empty=0e5751c0... abc=bddd813c...
-DB21
-cat > docs/BENCHMARKS.md << 'DBM1'
-# Benchmarks
-_reports in _benchmarks/reports/
-Latency ~8ms, RSS ~4MiB, binary ~130KiB (WSL2/GCC 15.2.0)
-DBM1
-git add docs/
-GIT_AUTHOR_DATE="2026-04-23 14:00:00 +0800" GIT_COMMITTER_DATE="2026-04-23 14:00:00 +0800" \
-  git commit -m "docs: BUILD, ARCHITECTURE, SANDBOX, SECCOMP, AUDIT_SCHEMA, THREAT_MODEL, BLAKE2B, BENCHMARKS"
-commit "docs: all 8 documentation files" "2026-04-23 16:30:00 +0800" docs/BUILD.md docs/ARCHITECTURE.md docs/SANDBOX.md docs/SECCOMP.md docs/AUDIT_SCHEMA.md docs/THREAT_MODEL.md docs/BLAKE2B.md docs/BENCHMARKS.md
 
-echo "=== Batch 5 done ==="
+24 syscalls allowed; everything else is killed (`SECCOMP_RET_KILL`):
+
+```
+read, write, openat, close, lseek, brk, mmap(arg-restricted), munmap,
+execve, exit_group, rt_sigaction, rt_sigprocmask, getrandom,
+clock_gettime, fstat, arch_prctl, mprotect(arg-restricted), prlimit64(arg-restricted),
+readlinkat, rseq, set_robust_list, set_tid_address, access, pread64
+```
+
+The last nine (`arch_prctl` .. `pread64`) are the C-runtime startup calls that
+a modern statically-linked glibc program needs before `main`; without them
+even a trivial static binary is killed at load time.
+
+Argument-level restrictions:
+
+```
+mmap     : flags == 0x22 (MAP_PRIVATE | MAP_ANONYMOUS)  AND  (prot & PROT_EXEC) == 0
+mprotect : (prot & PROT_EXEC) == 0        # preserves W^X; no page becomes executable
+prlimit64: new_limit == NULL              # read-only; the guest cannot raise its own rlimits
+```
+
+The `mprotect` and `prlimit64` restrictions are essential: an unrestricted
+`mprotect` would let a guest turn a writable page executable (defeating the
+`mmap` PROT_EXEC ban), and an unrestricted `prlimit64` would let it lift the
+CPU/AS/NPROC limits set by the sandbox.
+
+Because the policy forbids executable file mappings, **only statically-linked
+targets run**: a dynamically-linked program is rejected because its loader
+(`ld.so`) must `mmap` shared-library code with `PROT_EXEC`.
+
+The filter checks the architecture (`AUDIT_ARCH_X86_64`) first and rejects
+mismatches. For each whitelisted syscall number a comparison is emitted
+that either allows the call or falls through to the terminating action.
+
+See `docs/BENCHMARKS.md` for measured performance and
+`docs/AUDIT_SCHEMA.md` for the audit record format.

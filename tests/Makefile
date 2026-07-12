@@ -28,6 +28,7 @@ setup:all
 	cp build/hello_static build/roots/jail/bin/
 	cp build/hello_static build/roots/empty/bin/
 	cp build/payload_execve_replacement build/roots/execve/bin/
+	cp build/hello_static build/roots/execve/bin/target
 	cp build/hello_dynamic build/roots/hello_dynamic/bin/
 	cp build/payload_fd_inherited_read build/roots/fd_inh/bin/
 	cp build/payload_fd_inherited_read_dyn build/roots/fd_inh/bin/

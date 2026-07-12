@@ -31,9 +31,9 @@ test_sec() {
 }
 test_sec "scenario 1: seccomp_filter"
 test_ok   "scenario 2: hello_static"     "$D/roots/hello"   bin/hello_static
-test_ok   "scenario 3: hello_dynamic"   "$D/roots/hello_dynamic" bin/hello_dynamic
+test_killed "scenario 3: hello_dynamic (W^X rejects dynamic exec)" "$D/roots/hello_dynamic" bin/hello_dynamic
 test_ok   "scenario 4: execve_replacement" "$D/roots/execve" bin/payload_execve_replacement
-test_ok   "scenario 5: fd_inherited_read" "$D/roots/fd_inh" bin/payload_fd_inherited_read_dyn
+test_ok   "scenario 5: fd_inherited_read" "$D/roots/fd_inh" bin/payload_fd_inherited_read
 test_killed "scenario 6: mmap_bad_flags" "$D/roots/mmap_bad" bin/payload_mmap_bad_flags
 test_ok   "scenario 7: mmap_good_allowed" "$D/roots/mmap_good" bin/payload_mmap_good
 test_killed "scenario 8: mmap_prot_exec" "$D/roots/mmap_protexec" bin/payload_mmap_prot_exec

@@ -27,6 +27,21 @@ seccomp_rule axiom_whitelist[] = {
     {.nr = 318, .arch = AUDIT_ARCH_X86_64, .arg_count = 0},
     {.nr = 228, .arch = AUDIT_ARCH_X86_64, .arg_count = 0},
     {.nr = 5,   .arch = AUDIT_ARCH_X86_64, .arg_count = 0},
+    {.nr = 158, .arch = AUDIT_ARCH_X86_64, .arg_count = 0},
+    {.nr = 10,  .arch = AUDIT_ARCH_X86_64, .arg_count = 1,
+     .arg_rules = {
+        {.nr=10, .arch=AUDIT_ARCH_X86_64, .arg_idx=2, .value=0x0, .mask=0x4},
+     }},
+    {.nr = 302, .arch = AUDIT_ARCH_X86_64, .arg_count = 1,
+     .arg_rules = {
+        {.nr=302, .arch=AUDIT_ARCH_X86_64, .arg_idx=2, .value=0x0, .mask=0},
+     }},
+    {.nr = 267, .arch = AUDIT_ARCH_X86_64, .arg_count = 0},
+    {.nr = 334, .arch = AUDIT_ARCH_X86_64, .arg_count = 0},
+    {.nr = 273, .arch = AUDIT_ARCH_X86_64, .arg_count = 0},
+    {.nr = 218, .arch = AUDIT_ARCH_X86_64, .arg_count = 0},
+    {.nr = 21,  .arch = AUDIT_ARCH_X86_64, .arg_count = 0},
+    {.nr = 17,  .arch = AUDIT_ARCH_X86_64, .arg_count = 0},
 };
 int axiom_whitelist_size = (int)(sizeof(axiom_whitelist)/sizeof(axiom_whitelist[0]));
 

@@ -3,12 +3,12 @@
   <h1>Z-Jail</h1>
   <p>
     Multi-layer sandbox for native code execution on Linux.<br/>
-    Seven independent defence layers — no external dependencies, ~130 KiB PIE binary.
+    Seven independent defence layers — no external dependencies, ~73 KiB PIE binary.
   </p>
   <img src="https://img.shields.io/badge/platform-Linux%205.4%2B-blue?style=flat-square"/>
   <img src="https://img.shields.io/badge/language-C99-lightgrey?style=flat-square"/>
   <img src="https://img.shields.io/badge/license-MIT-red?style=flat-square"/>
-  <img src="https://img.shields.io/badge/size-~130%20KiB-green?style=flat-square"/>
+  <img src="https://img.shields.io/badge/size-~73%20KiB-green?style=flat-square"/>
 </div>
 
 ---
@@ -66,7 +66,7 @@ Existing sandboxing solutions make trade-offs:
 |                    | **Z-Jail**  | **Firecracker** | **gVisor** | **bwrap** | **nsjail** |
 |--------------------|-------------|-----------------|------------|-----------|------------|
 | External deps      | **zero**    | libc, seccomp   | Go runtime | libc      | libc, protobuf |
-| Binary size        | **~130 KiB**| 20+ MiB         | 40+ MiB    | ~70 KiB   | ~1 MiB     |
+| Binary size        | **~73 KiB** | 20+ MiB         | 40+ MiB    | ~70 KiB   | ~1 MiB     |
 | VM isolation       | no          | yes (microVM)   | no (sandbox)| no        | no        |
 | seccomp whitelist  | **yes**     | no              | yes        | optional  | yes        |
 | Content hashing    | **yes**     | no              | no         | no        | no         |
@@ -359,17 +359,44 @@ Requires root for namespace creation. The test suite covers:
 
 ## Performance
 
-Numbers from WSL2 (Kali Linux, GCC 15.2.0, -O2 -g):
+Measured on WSL2 (kernel 6.18.x-microsoft-standard-WSL2, Kali Linux),
+50 samples per tool, uniform workload (a freestanding static binary whose
+body is `exit_group(0)`), timed with a `getrusage` harness. See
+[`docs/BENCHMARKS.md`](docs/BENCHMARKS.md) for methodology.
 
 | Metric | Value |
 |--------|-------|
-| Binary size | ~130 KiB |
-| Mean sandbox latency | ~8 ms |
-| Peak RSS | ~4 MiB |
+| Binary size | ~73 KiB unstripped (~28 KiB stripped) |
+| Mean sandbox latency | **5.85 ± 1.45 ms** (95% CI [5.45, 6.25]) |
+| Peak RSS | **1.62 MiB** |
 | Lines of code (core) | ~900 |
-| Test suite runtime | ~5 s |
 
-Latency breakdown (approx): clone + namespaces ~3 ms, pivot_root ~2 ms, seccomp + caps ~1 ms, execve ~1 ms, waitpid + audit ~1 ms.
+### Head-to-head (same host, same methodology)
+
+| Tool    | Latency mean ± sd | Peak RSS | Default seccomp |
+|---------|-------------------|----------|-----------------|
+| **Z-Jail** | 5.85 ± 1.45 ms | **1.62 MiB** | yes |
+| bwrap   | **3.56 ± 0.40 ms** | 2.19 MiB | no |
+| nsjail  | 8.98 ± 1.68 ms    | 7.91 MiB | yes |
+
+Under the tested conditions Z-Jail has the **smallest resident set** of the
+three process-level sandboxes and a latency between bwrap and nsjail.
+Bubblewrap is fastest but performs no seccomp filtering by default, so it
+does less setup work; Z-Jail installs a seccomp whitelist, drops
+capabilities, and does `pivot_root` on every run. gVisor (`runsc`)
+segfaults on this WSL2 kernel and could not be measured; Firecracker
+isolates via a microVM (VM cold-boot, a different metric) and is excluded
+from the fork-to-exec table. These are single-host numbers — treat them as
+relative.
+
+> Note: the older documented figures (~8 ms, ~4 MiB, ~130 KiB) do not match
+> a current `make` build (~73 KiB, ~5.9 ms) and appear to have been
+> inaccurate; the numbers above were re-measured on this codebase.
+> Truthimatics is still part of the code and was **not** removed (the old
+> `axiom_jail` reports simply used a different binary name and harness).
+> A mount-propagation bug found during benchmarking was fixed in
+> `src/sandbox.c` (`MS_REC|MS_PRIVATE` before the bind mount); the recursive
+> remount contributes part of the measured latency.
 
 ---
 

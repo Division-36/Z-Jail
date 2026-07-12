@@ -10,6 +10,8 @@ static int pivot_into(const char *new_root)
     snprintf(put_old, sizeof(put_old), "%s/.pivot_old", new_root);
     if (mkdir(put_old,0755)<0 && errno!=EEXIST)
         { axiom_log(LOG_ERROR,"pivot: mkdir %s: %s\n",put_old,strerror(errno)); return -1; }
+    if (mount(NULL,"/",NULL,MS_REC|MS_PRIVATE,NULL)<0)
+        { axiom_log(LOG_ERROR,"pivot: make-rprivate: %s\n",strerror(errno)); return -1; }
     if (mount(new_root,new_root,NULL,MS_BIND|MS_REC,NULL)<0)
         { axiom_log(LOG_ERROR,"pivot: bind mount: %s\n",strerror(errno)); return -1; }
     if (syscall(SYS_pivot_root,new_root,put_old)<0)
