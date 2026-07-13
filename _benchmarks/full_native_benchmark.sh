@@ -83,15 +83,50 @@ elif command -v zypper  >/dev/null 2>&1; then PKG="zypper"
 fi
 log "distro=$DISTRO  package-manager=${PKG:-none}"
 
+# Wait until the dpkg/apt locks are free. Fresh cloud images run
+# unattended-upgrades on first boot and hold these locks for minutes, which is
+# exactly what made package installs fail silently before. Returns 0 when free.
+wait_apt_free() {
+    local tries=72   # up to ~6 min
+    while [ "$tries" -gt 0 ]; do
+        if fuser /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/lib/apt/lists/lock \
+                >/dev/null 2>&1; then
+            sleep 5; tries=$((tries-1)); continue
+        fi
+        if pgrep -x apt-get >/dev/null 2>&1 || pgrep -x dpkg >/dev/null 2>&1 \
+                || pgrep -x unattended-upgrade >/dev/null 2>&1; then
+            sleep 5; tries=$((tries-1)); continue
+        fi
+        return 0
+    done
+    return 1
+}
+
 pkg_install() {
     # pkg_install <generic names...>  -- best-effort, never fatal
     [ "${CAN_INSTALL:-0}" -eq 0 ] && { warn "cannot install (no root/sudo); assuming preinstalled: $*"; return 0; }
     [ -z "$PKG" ] && { warn "no package manager; skipping install of: $*"; return 0; }
     case "$PKG" in
         apt)
-            $SUDO apt-get update -y  >/dev/null 2>&1
-            $SUDO DEBIAN_FRONTEND=noninteractive apt-get install -y "$@" \
-                 >/dev/null 2>&1 || warn "apt: some of [$*] failed" ;;
+            # Stop first-boot unattended-upgrades so it stops hogging the lock.
+            $SUDO systemctl stop unattended-upgrades 2>/dev/null
+            $SUDO systemctl disable unattended-upgrades 2>/dev/null
+            $SUDO pkill -9 -f unattended-upgrade 2>/dev/null
+            wait_apt_free || warn "apt lock still busy after waiting; install may fail"
+            export DEBIAN_FRONTEND=noninteractive
+            local logf
+            logf="$(mktemp)"
+            for attempt in 1 2 3; do
+                $SUDO apt-get update -y >"$logf" 2>&1
+                if $SUDO apt-get install -y "$@" >>"$logf" 2>&1; then
+                    rm -f "$logf"; return 0
+                fi
+                sleep 3
+            done
+            warn "apt: some of [$*] failed (last apt output follows)"
+            tail -20 "$logf" >&2
+            rm -f "$logf"
+            ;;
         dnf) $SUDO dnf install -y "$@"    >/dev/null 2>&1 || warn "dnf: some of [$*] failed" ;;
         yum) $SUDO yum install -y "$@"    >/dev/null 2>&1 || warn "yum: some of [$*] failed" ;;
         pacman) $SUDO pacman -Sy --noconfirm "$@" >/dev/null 2>&1 || warn "pacman: some of [$*] failed" ;;
@@ -147,7 +182,7 @@ install_nsjail() {
     esac
     ( cd "$BUILD" && \
       git clone --depth=1 https://github.com/google/nsjail.git nsjail-src >/dev/null 2>&1 && \
-      cd nsjail-src && make -j"$(nproc)" >/dev/null 2>&1 && \
+      cd nsjail-src && timeout -k 5 900 make -j"$(nproc)" >/dev/null 2>&1 && \
       [ -x ./nsjail ] && cp ./nsjail "$BUILD/nsjail" )
     if [ -x "$BUILD/nsjail" ]; then
         ok "nsjail built from source -> $BUILD/nsjail"
@@ -243,7 +278,10 @@ gcc -O2 -o "$BUILD/harness" "$BUILD/harness.c" || { err "harness build failed"; 
 ok "harness built"
 
 # ------------------------------ sandbox roots ---------------------------------
-ROOT="$BUILD/root"
+# Put the sandbox root in /tmp: bubblewrap (when run as root) cannot bind-mount
+# a source path that lives under /home, so a world-readable /tmp root is used.
+ROOT="$(mktemp -d /tmp/zjroot.XXXXXX)"
+chmod 0755 "$ROOT"
 mkdir -p "$ROOT/bin"
 cp "$BUILD/workload" "$ROOT/bin/workload"
 chmod 0755 "$ROOT/bin/workload"
@@ -257,9 +295,9 @@ NSJAIL_CMD=( "$NSJAIL_BIN" -Mo -q --chroot "$ROOT" --disable_proc -- /bin/worklo
 # ------------------------------ sanity checks ---------------------------------
 declare -A TOOL_OK
 sanity() {
-    # sanity <name> <cmd...>
+    # sanity <name> <cmd...>  -- bounded by timeout so a hanging tool can't stall us
     local name="$1"; shift
-    "$@" >/dev/null 2>&1
+    timeout -k 5 30 "$@" >/dev/null 2>&1
     local rc=$?
     if [ $rc -eq 0 ]; then TOOL_OK[$name]=1; ok "$name runs the workload (exit 0)"
     else TOOL_OK[$name]=0; warn "$name sanity failed (exit $rc) -- will be skipped"; fi
@@ -297,7 +335,7 @@ run_bench() {
         return 1
     fi
     log "benchmarking $name  (warmup=$WARMUP iters=$ITERS)"
-    "$BUILD/harness" "$WARMUP" "$ITERS" "$@" > "$csv" 2>/dev/null
+    timeout -k 5 120 "$BUILD/harness" "$WARMUP" "$ITERS" "$@" > "$csv" 2>/dev/null
     local lat rss
     lat="$(tail -n +2 "$csv" | cut -d, -f2 | awk '{print $1/1e6}' | stats_from_values)"
     rss="$(tail -n +2 "$csv" | cut -d, -f3 | awk '{print $1/1024}' | stats_from_values)"
@@ -332,7 +370,7 @@ SLOC="$(cd "$REPO_DIR" && find src include -name '*.[ch]' -exec cat {} + 2>/dev/
 # ---------------------------- functional tests --------------------------------
 log "running the project functional test suite"
 TESTS_OUT="$OUTDIR/functional_tests.txt"
-( cd "$REPO_DIR" && bash tests/run_tests.sh ) > "$TESTS_OUT" 2>&1
+( cd "$REPO_DIR" && timeout -k 5 180 bash tests/run_tests.sh ) > "$TESTS_OUT" 2>&1
 TESTS_SUMMARY="$(grep -E '=== .* passed' "$TESTS_OUT" | tail -1)"
 [ -n "$TESTS_SUMMARY" ] && ok "$TESTS_SUMMARY" || warn "test summary line not found (see $TESTS_OUT)"
 

@@ -10,4 +10,5 @@ fuzz/fuzz_bpf
 *.gcov
 .githooks/
 _benchmarks/reports/
+_benchmarks/vm_results/
 .release-key
