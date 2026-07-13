@@ -6,7 +6,7 @@ msg() { printf "  %-40s %s\n" "$1" "$2"; }
 pass() { P=$((P+1)); msg "$1" "PASS"; }
 fail() { F=$((F+1)); msg "$1" "FAIL"; echo "$2"; }
 skip() { S=$((S+1)); msg "$1" "SKIP"; }
-pe() { "$Z" --root="$1" --seccomp-enforce -- "$2" 2>/dev/null; return $?; }
+pe() { timeout -k 2 20 "$Z" --root="$1" --seccomp-enforce -- "$2" </dev/null 2>/dev/null; return $?; }
 skip_if() { local e=$1; [ "$e" = "125" ] && { skip "$2"; return 0; }; return 1; }
 echo "=== Z-Jail Test Suite ==="
 make -C "$SELF" setup>/dev/null 2>&1;mkdir -p "$D/audits"
