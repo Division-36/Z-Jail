@@ -290,7 +290,7 @@ chmod 0755 "$ROOT/bin/workload"
 ZJAIL_CMD=( "$ZJAIL" "--root=$ROOT" "--seccomp-enforce" "--" "bin/workload" )
 BWRAP_CMD=( bwrap --unshare-all --die-with-parent --ro-bind "$ROOT" / -- /bin/workload )
 NSJAIL_BIN="$(command -v nsjail || echo "$BUILD/nsjail")"
-NSJAIL_CMD=( "$NSJAIL_BIN" -Mo -q --chroot "$ROOT" --disable_proc -- /bin/workload )
+NSJAIL_CMD=( "$NSJAIL_BIN" -Mo -q --chroot "$ROOT" --disable_proc --disable_clone_newuser -- /bin/workload )
 
 # ------------------------------ sanity checks ---------------------------------
 declare -A TOOL_OK
