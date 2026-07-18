@@ -94,16 +94,38 @@ void axiom_blake2b_update(axiom_blake2b_ctx *ctx,
     const void *data, size_t len)
 {
     const uint8_t *p = (const uint8_t *)data;
-    size_t i;
+    size_t left, fill;
 
-    for (i = 0; i < len; i++) {
-        ctx->buf[ctx->buflen++] = p[i];
-        if (ctx->buflen == AXIOM_BLAKE2B_BLOCK_LEN) {
-            b2b_compress(ctx->h, ctx->buf, ctx->t, 0);
+    if (len == 0)
+        return;
+
+    /* The counter t must count the number of bytes processed up to and
+     * including the block being compressed (RFC 7693, sec. 3.3), so it is
+     * incremented BEFORE each compression. We also always hold back at least
+     * one block: a full block is compressed here only when strictly more
+     * input remains, so the final (possibly full) block is compressed by
+     * axiom_blake2b_final() with the last-block flag set. */
+    left = ctx->buflen;
+    fill = AXIOM_BLAKE2B_BLOCK_LEN - left;
+
+    if (len > fill) {
+        ctx->buflen = 0;
+        memcpy(ctx->buf + left, p, fill);
+        ctx->t += AXIOM_BLAKE2B_BLOCK_LEN;
+        b2b_compress(ctx->h, ctx->buf, ctx->t, 0);
+        p += fill;
+        len -= fill;
+
+        while (len > AXIOM_BLAKE2B_BLOCK_LEN) {
             ctx->t += AXIOM_BLAKE2B_BLOCK_LEN;
-            ctx->buflen = 0;
+            b2b_compress(ctx->h, p, ctx->t, 0);
+            p += AXIOM_BLAKE2B_BLOCK_LEN;
+            len -= AXIOM_BLAKE2B_BLOCK_LEN;
         }
     }
+
+    memcpy(ctx->buf + ctx->buflen, p, len);
+    ctx->buflen += len;
 }
 
 void axiom_blake2b_final(axiom_blake2b_ctx *ctx,

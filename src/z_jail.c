@@ -64,6 +64,8 @@ int main(int argc,char**argv){
     verdict=(WIFEXITED(status)&&WEXITSTATUS(status)==0)?AXIOM_VERDICT_DETERMINISTIC:AXIOM_VERDICT_REJECT;
     if(axiom_blake2b_file(cfg.exec_path,file_hash)==0)axiom_hex_encode(file_hash,32,file_hash_hex);
     else snprintf(file_hash_hex,sizeof(file_hash_hex),"unavailable");
+    const char*prev_hash=audit?audit->prev_hash_hex:
+        "0000000000000000000000000000000000000000000000000000000000000000";
     snprintf(audit_json,sizeof(audit_json),
         "{\"schema\":\"z-jail.audit/v1\",\"build_id\":\""ZJAIL_BUILD_ID"\""
         ",\"timestamp\":%lld,\"duration_ns\":%lld"
@@ -72,10 +74,10 @@ int main(int argc,char**argv){
         ",\"seccomp_whitelist_size\":%d,\"seccomp_arg_rules_size\":%d"
         ",\"namespaces\":[\"mount\",\"pid\",\"net\",\"ipc\",\"uts\"]"
         ",\"pivot_root\":\"%s\",\"no_new_privs\":true,\"capabilities_dropped\":true"
-        "},\"content_fingerprint\":\"%s\"}"
+        "},\"content_fingerprint\":\"%s\",\"prev_hash\":\"%s\"}"
         ,(long long)time(NULL),end_ns-start_ns,cfg.exec_path,verdict_str(verdict)
         ,WIFEXITED(status)?WEXITSTATUS(status):-WTERMSIG(status)
-        ,axiom_whitelist_size,axiom_arg_rules_size,cfg.root_path,file_hash_hex);
+        ,axiom_whitelist_size,axiom_arg_rules_size,cfg.root_path,file_hash_hex,prev_hash);
     if(!quiet&&audit)axiom_audit_write(audit,"sessions",audit_json);
     axiom_audit_close(audit);
     return WIFEXITED(status)?WEXITSTATUS(status):1;

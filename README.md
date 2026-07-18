@@ -3,12 +3,12 @@
   <h1>Z-Jail</h1>
   <p>
     Multi-layer sandbox for native code execution on Linux.<br/>
-    Seven independent defence layers — no external dependencies, ~73 KiB PIE binary.
+    Six independent defence layers — no external dependencies, ~37 KiB PIE binary.
   </p>
   <img src="https://img.shields.io/badge/platform-Linux%205.4%2B-blue?style=flat-square"/>
   <img src="https://img.shields.io/badge/language-C99-lightgrey?style=flat-square"/>
   <img src="https://img.shields.io/badge/license-MIT-red?style=flat-square"/>
-  <img src="https://img.shields.io/badge/size-~73%20KiB-green?style=flat-square"/>
+  <img src="https://img.shields.io/badge/size-~37%20KiB-green?style=flat-square"/>
 </div>
 
 ---
@@ -17,12 +17,11 @@
 ┌──────────────────────────────────────────────────────┐
 │                    Z-Jail                            │
 ├──────────────────────────────────────────────────────┤
-│  Truthimatics PV  (evidence-based verdict engine)    │
 │  Namespaces       (mount, pid, net, ipc, uts)        │
 │  pivot_root       (chroot on steroids)               │
 │  Capabilities     (drop all, lock securebits)        │
 │  NO_NEW_PRIVS     (no privilege escalation)          │
-│  seccomp-BPF      (whitelist: 15 syscalls only)      │
+│  seccomp-BPF      (whitelist: 24 syscalls only)      │
 │  Audit            (JSON logging + BLAKE2b hashing)   │
 └──────────────────────────────────────────────────────┘
 ```
@@ -66,7 +65,7 @@ Existing sandboxing solutions make trade-offs:
 |                    | **Z-Jail**  | **Firecracker** | **gVisor** | **bwrap** | **nsjail** |
 |--------------------|-------------|-----------------|------------|-----------|------------|
 | External deps      | **zero**    | libc, seccomp   | Go runtime | libc      | libc, protobuf |
-| Binary size        | **~73 KiB** | 20+ MiB         | 40+ MiB    | ~70 KiB   | ~1 MiB     |
+| Binary size        | **~37 KiB** | 20+ MiB         | 40+ MiB    | ~70 KiB   | ~1 MiB     |
 | VM isolation       | no          | yes (microVM)   | no (sandbox)| no        | no        |
 | seccomp whitelist  | **yes**     | no              | yes        | optional  | yes        |
 | Content hashing    | **yes**     | no              | no         | no        | no         |
@@ -136,10 +135,7 @@ sequenceDiagram
 
 ## Layers
 
-### 1. Truthimatics Public Version
-Evidence-based verdict engine. Collects weighted observations about the executed binary and determines a final verdict (`DETERMINISTIC`, `REJECT`, or `UNCERTAIN`). Each observation carries a weight; any single observation with weight >50% of total decides the verdict.
-
-### 2. Namespaces
+### 1. Namespaces
 Five namespaces are created via `clone()`:
 
 | Namespace | Flag | Purpose |
@@ -152,7 +148,7 @@ Five namespaces are created via `clone()`:
 
 Requires `CAP_SYS_ADMIN` in the initial namespace.
 
-### 3. pivot_root
+### 2. pivot_root
 Replaces the mount namespace root with the `--root` directory:
 
 1. Bind-mount the root directory onto itself (`MS_BIND|MS_REC`)
@@ -163,7 +159,7 @@ Replaces the mount namespace root with the `--root` directory:
 
 This is strictly stronger than `chroot(2)` — there is no way for the sandboxed process to escape back to the host root, even with `CLONE_NEWNS` from inside the sandbox (which is already blocked by seccomp).
 
-### 4. Capabilities
+### 3. Capabilities
 All capabilities are dropped via:
 
 ```c
@@ -173,16 +169,16 @@ prctl(SECBIT_KEEP_CAPS_LOCKED | SECBIT_NO_SETUID_FIXUP | ...)
 
 The process drops `setuid`/`setgid` *before* `capset` so the uid change takes effect while `CAP_SETUID` is still held. After `capset`, all caps are gone and the securebits are locked — no re-enablement is possible.
 
-### 5. NO_NEW_PRIVS
+### 4. NO_NEW_PRIVS
 ```c
 prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0);
 ```
 
 Prevents the process or its children from gaining new privileges via `setuid` binaries, file capabilities, or `LSM` transitions. Irreversible.
 
-### 6. seccomp-BPF (whitelist-v1)
+### 5. seccomp-BPF (whitelist-v1)
 
-Allow-list of 15 syscalls — anything not on the list gets `SECCOMP_RET_KILL`:
+Allow-list of 24 syscalls — anything not on the list gets `SECCOMP_RET_KILL`:
 
 | Syscall | Number | Notes |
 |---------|--------|-------|
@@ -201,12 +197,23 @@ Allow-list of 15 syscalls — anything not on the list gets `SECCOMP_RET_KILL`:
 | `getrandom` | 318 | random number source |
 | `clock_gettime` | 228 | timing |
 | `fstat` | 5 | file metadata |
+| `arch_prctl` | 158 | TLS setup |
+| `mprotect` | 10 | arg-restricted: `prot & PROT_EXEC == 0` (preserves W^X) |
+| `prlimit64` | 302 | arg-restricted: `new_limit == NULL` (read-only; cannot raise rlimits) |
+| `readlinkat` | 267 | — |
+| `rseq` | 334 | glibc restartable sequences |
+| `set_robust_list` | 273 | glibc thread init |
+| `set_tid_address` | 218 | glibc init |
+| `access` | 21 | — |
+| `pread64` | 17 | — |
 
-The BPF filter is generated dynamically: for each whitelist entry, a jump chain is emitted that either allows (if syscall matches) or falls through to KILL. Architecture is checked first (`AUDIT_ARCH_X86_64`).
+The last nine (`arch_prctl` .. `pread64`) are the C-runtime startup calls a
+modern statically-linked glibc program needs before `main`. The BPF filter is
+generated dynamically: for each whitelist entry, a jump chain is emitted that either allows (if syscall matches) or falls through to KILL. Architecture is checked first (`AUDIT_ARCH_X86_64`).
 
 The filter is verified independently by a standalone test (`tests/seccomp_filter_test.c`, 8/8 pass) that fork+execves test cases against a real `prctl(PR_SET_SECCOMP)` without needing root.
 
-### 7. Audit
+### 6. Audit
 Every execution produces a JSON audit record:
 
 ```json
@@ -220,18 +227,24 @@ Every execution produces a JSON audit record:
   "exit_code": 0,
   "sandbox": {
     "seccomp_filter": "whitelist-v1",
-    "seccomp_whitelist_size": 15,
+    "seccomp_whitelist_size": 24,
     "seccomp_arg_rules_size": 2,
     "namespaces": ["mount","pid","net","ipc","uts"],
     "pivot_root": "/var/run/z-jail/roots/default",
     "no_new_privs": true,
     "capabilities_dropped": true
   },
-  "content_fingerprint": "0e5751c026e543b2e8ab2eb06099daa1..."
+  "content_fingerprint": "0e5751c026e543b2e8ab2eb06099daa1...",
+  "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000"
 }
 ```
 
-Written to `build/audits/<binary-name>.audit.json`. The `content_fingerprint` is a BLAKE2b-256 hash of the target binary, computed by the parent after the child finishes.
+Written to `build/audits/<binary-name>.audit.json`. The `content_fingerprint` is
+the canonical BLAKE2b-256 hash of the target binary (reproducible with
+`b2sum -l 256`), computed by the parent after the child finishes. Records form a
+hash chain via `prev_hash`, and the file is opened without following symlinks in
+any path component and marked append-only (`chattr +a`) so it cannot be
+truncated or overwritten in place. See [docs/AUDIT_SCHEMA.md](docs/AUDIT_SCHEMA.md).
 
 ---
 
@@ -294,7 +307,7 @@ sudo z_jail --root=./roots --quiet -- bin/program
 ### Commands
 
 ```sh
-make              # build z_jail (~130 KiB PIE binary)
+make              # build z_jail (~83 KiB unstripped PIE binary)
 make install      # install to /usr/local/bin + man page
 make clean        # remove build artifacts
 make dist         # create release tarball
@@ -359,41 +372,40 @@ Requires root for namespace creation. The test suite covers:
 
 ## Performance
 
-Measured on WSL2 (kernel 6.18.x-microsoft-standard-WSL2, Kali Linux),
-50 samples per tool, uniform workload (a freestanding static binary whose
-body is `exit_group(0)`), timed with a `getrusage` harness. See
-[`docs/BENCHMARKS.md`](docs/BENCHMARKS.md) for methodology.
+Measured on native Ubuntu 26.04 LTS (kernel 7.0.0, Intel i7-11800H, 4 vCPUs,
+3.8 GiB RAM), 50 samples per tool, uniform workload (a freestanding static
+binary whose body is `exit_group(0)`), timed with a `getrusage` harness.
+A WSL2 run on the same hardware is also reported in
+[`docs/BENCHMARKS.md`](docs/BENCHMARKS.md).
 
 | Metric | Value |
 |--------|-------|
-| Binary size | ~73 KiB unstripped (~28 KiB stripped) |
-| Mean sandbox latency | **5.85 ± 1.45 ms** (95% CI [5.45, 6.25]) |
-| Peak RSS | **1.62 MiB** |
-| Lines of code (core) | ~900 |
+| Binary size | ~83 KiB unstripped (~37 KiB stripped) |
+| Mean sandbox latency | **2.31 ± 0.56 ms** (95% CI [2.16, 2.47]) |
+| Peak RSS | **1.61 MiB** |
+| Lines of code (core) | ~800 |
 
 ### Head-to-head (same host, same methodology)
 
 | Tool    | Latency mean ± sd | Peak RSS | Default seccomp |
 |---------|-------------------|----------|-----------------|
-| **Z-Jail** | 5.85 ± 1.45 ms | **1.62 MiB** | yes |
-| bwrap   | **3.56 ± 0.40 ms** | 2.19 MiB | no |
-| nsjail  | 8.98 ± 1.68 ms    | 7.91 MiB | yes |
+| **Z-Jail** | 2.31 ± 0.56 ms | **1.61 MiB** | yes |
+| bwrap   | 3.35 ± 0.60 ms | 2.32 MiB | no |
+| nsjail  | 6.28 ± 1.48 ms    | 7.86 MiB | yes |
 
-Under the tested conditions Z-Jail has the **smallest resident set** of the
-three process-level sandboxes and a latency between bwrap and nsjail.
-Bubblewrap is fastest but performs no seccomp filtering by default, so it
-does less setup work; Z-Jail installs a seccomp whitelist, drops
-capabilities, and does `pivot_root` on every run. gVisor (`runsc`)
-segfaults on this WSL2 kernel and could not be measured; Firecracker
+Under the tested conditions Z-Jail has the **smallest resident set** and the
+**lowest latency** of the three process-level sandboxes. Bubblewrap performs
+no seccomp filtering by default and does less setup work, yet is slightly
+slower here; Z-Jail installs a seccomp whitelist, drops capabilities, and
+does `pivot_root` on every run. gVisor (`runsc`) segfaults on the WSL2
+kernel (see `docs/BENCHMARKS.md`) and could not be measured there; Firecracker
 isolates via a microVM (VM cold-boot, a different metric) and is excluded
 from the fork-to-exec table. These are single-host numbers — treat them as
 relative.
 
-> Note: the older documented figures (~8 ms, ~4 MiB, ~130 KiB) do not match
-> a current `make` build (~73 KiB, ~5.9 ms) and appear to have been
-> inaccurate; the numbers above were re-measured on this codebase.
-> Truthimatics is still part of the code and was **not** removed (the old
-> `axiom_jail` reports simply used a different binary name and harness).
+> Note: earlier documented figures (~8 ms, ~4 MiB, ~130 KiB) were inaccurate
+> and do not match this codebase; the numbers above were re-measured on a
+> current `make` build.
 > A mount-propagation bug found during benchmarking was fixed in
 > `src/sandbox.c` (`MS_REC|MS_PRIVATE` before the bind mount); the recursive
 > remount contributes part of the measured latency.
@@ -451,7 +463,7 @@ relative.
 ## Roadmap
 
 ### v1 (current)
-- 7-layer defence-in-depth sandbox
+- 6-layer defence-in-depth sandbox
 - BLAKE2b-256 content fingerprinting
 - Audit JSON output
 - 17 test scenarios

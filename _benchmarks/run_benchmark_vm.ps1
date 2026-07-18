@@ -1,6 +1,6 @@
-#Requires -RunAsAdministrator
+﻿#Requires -RunAsAdministrator
 <#
-  run_benchmark_vm.ps1  --  one-shot, hands-off Z-Jail / TAC benchmark.
+  run_benchmark_vm.ps1  --  one-shot, hands-off Z-Jail benchmark.
 
   WHAT IT DOES (all by itself, once you start it in an ADMIN PowerShell):
     1. installs Multipass (a Hyper-V-backed Linux VM manager) if it is missing;
@@ -13,16 +13,16 @@
   HOW TO RUN:
     - Right-click "Windows PowerShell" -> "Run as administrator"
     - Then paste this ONE line:
-        powershell -ExecutionPolicy Bypass -File "D:\Axioms\Z-Jail\_benchmarks\run_benchmark_vm.ps1"
+        powershell -ExecutionPolicy Bypass -File ".\_benchmarks\run_benchmark_vm.ps1"
 
-  To reclaim the ~3 GB afterwards:  multipass delete zjbench; multipass purge
+  To reclaim the ~3 GB afterwards:  multipass delete zjail-bench; multipass purge
 #>
 
 $ErrorActionPreference = 'Stop'
-$VM         = 'zjbench'
+$VM         = 'zjail-bench'
 $LocalScript= Join-Path $PSScriptRoot 'full_native_benchmark.sh'
 $OutDir     = Join-Path $PSScriptRoot 'vm_results'
-$VmOut      = '/home/ubuntu/zjresult'
+$VmOut      = '/home/ubuntu/zjail-bench-out'
 
 function Say($m){ Write-Host "==> $m" -ForegroundColor Cyan }
 function Refresh-Path {
@@ -91,4 +91,4 @@ Write-Host  (" Folder : " + $OutDir) -ForegroundColor Green
 Write-Host '==================================================================' -ForegroundColor Green
 Write-Host ''
 Write-Host 'Environment recorded inside REPORT.md (kernel, CPU, virt=hyperv).'
-Write-Host 'To reclaim the ~3 GB now:  multipass delete zjbench; multipass purge'
+Write-Host 'To reclaim the ~3 GB now:  multipass delete zjail-bench; multipass purge'

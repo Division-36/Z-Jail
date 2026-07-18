@@ -12,3 +12,7 @@ fuzz/fuzz_bpf
 _benchmarks/reports/
 _benchmarks/vm_results/
 .release-key
+paper/*
+DEMOBlackHat/
+
+paper/CSFDemo/

@@ -3,10 +3,10 @@
 ## [v1] - 2026-06-04
 
 ### Added
-- 7-layer sandbox: Truthimatics Public Version, namespaces, pivot_root, caps,
+- 6-layer sandbox: namespaces, pivot_root, caps,
   NO_NEW_PRIVS, seccomp-BPF, audit
 - BLAKE2b content fingerprinting (RFC 7693)
-- BPF whitelist with 15 syscalls + arg restrictions for mmap
+- BPF whitelist with 24 syscalls + arg restrictions for mmap, mprotect, prlimit64
 - Audit JSON output (`z-jail.audit/v1`)
 - `--quiet`, `--help`, `--version` CLI flags
 - install / uninstall / dist Makefile targets
@@ -33,4 +33,4 @@
 
 ---
 
-~135 commits across 6 weeks. Zero external dependencies, ~130 KiB binary.
+~135 commits across 6 weeks. Zero external dependencies, ~83 KiB binary.

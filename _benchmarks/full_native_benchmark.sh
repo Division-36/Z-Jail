@@ -2,7 +2,7 @@
 #
 # full_native_benchmark.sh
 # ------------------------------------------------------------------------------
-# One-shot, self-contained benchmark harness for the Z-Jail / TAC paper.
+# One-shot, self-contained benchmark harness for Z-Jail.
 #
 # It will, on a NATIVE Linux machine:
 #   1. detect the distro and install every dependency (build tools, bubblewrap,
@@ -389,7 +389,7 @@ ZJAIL_COMMIT="$(cd "$REPO_DIR" && git rev-parse --short HEAD 2>/dev/null || echo
 # ------------------------------- the report -----------------------------------
 log "writing report -> $REPORT"
 {
-echo "# Z-Jail / TAC Native Benchmark Report"
+echo "# Z-Jail Native Benchmark Report"
 echo
 echo "Generated: $(date -u '+%Y-%m-%d %H:%M:%SZ')"
 echo

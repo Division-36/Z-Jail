@@ -2,7 +2,7 @@
 ## Context
 Seccomp-BPF can deny specific syscalls or allow only known-good ones.
 ## Decision
-Whitelist: allow only 15 syscalls needed for static binaries.
+Whitelist: allow only 24 syscalls needed for static binaries.
 Blacklist approach is fragile against new bypass vectors.
 ## Consequences
 + Strong security guarantee: unknown syscalls are denied by default

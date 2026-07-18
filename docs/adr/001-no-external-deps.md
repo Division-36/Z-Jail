@@ -4,5 +4,5 @@ libseccomp, libcap, libcrypto are common for sandboxing.
 ## Decision
 Hand-roll BPF, capabilities, BLAKE2b to minimize supply chain risk and binary size.
 ## Consequences
-+ No linking issues, small binary (~130 KiB)
++ No linking issues, small binary (~83 KiB unstripped, ~37 KiB stripped)
 - More code to maintain and audit

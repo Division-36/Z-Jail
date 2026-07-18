@@ -21,7 +21,6 @@
 #include <linux/filter.h>
 #include <linux/seccomp.h>
 #include <linux/capability.h>
-#include "truthimatics.h"
 #include "sandbox.h"
 #include "util.h"
 #include "audit.h"
@@ -49,8 +48,12 @@ void axiom_log(int level, const char *fmt, ...)
 #define AXIOM_PRINTF(f,a) __attribute__((format(printf,f,a)))
 #define AXIOM_STATIC_ASSERT(cond, msg) \
 	typedef char AXIOM_UNUSED _axiom_sa_##msg[(cond) ? 1 : -1]
-int axiom_evidence_add_fn(axiom_evidence_chain *chain,
-	const char *id, axiom_weight weight,
-	axiom_evidence_fn fn, void *ctx, const char *target);
 int axiom_child(void *arg);
 void axiom_fatal(const char *msg) AXIOM_NORETURN;
+
+
+typedef enum {
+    AXIOM_VERDICT_DETERMINISTIC = 0,
+    AXIOM_VERDICT_REJECT       = 1,
+    AXIOM_VERDICT_UNCERTAIN    = 2
+} axiom_verdict;

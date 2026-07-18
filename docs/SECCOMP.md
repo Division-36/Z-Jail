@@ -1,4 +1,4 @@
-# seccomp-BPF whitelist-v1
+# seccomp-BPF whitelist
 
 24 syscalls allowed; everything else is killed (`SECCOMP_RET_KILL`):
 
