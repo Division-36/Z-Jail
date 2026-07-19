@@ -16,3 +16,17 @@ paper/*
 DEMOBlackHat/
 
 paper/CSFDemo/
+
+tac_dsn.*
+*.tex
+*.pdf
+*.aux
+*.log
+*.out
+*.bbl
+*.blg
+*.nav
+*.snm
+*.toc
+*.vrb
+*.synctex.gz
