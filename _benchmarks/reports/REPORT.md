@@ -1,13 +1,13 @@
-# Axiom-Jail Benchmark Report
+# Z-Jail Benchmark Report
 
-- Binary: `/mnt/d/Axioms/Z-Jail/axiom_jail` (127 KiB)
+- Binary: `z_jail` (~83 KiB unstripped, ~37 KiB stripped)
 - Latency samples: **50**
 - Memory  samples: **25**
 - Fan-out samples: **15**
 
 ## 1. Latency overhead
 
-Wall-clock time from `axiom_jail` invocation to the
+Wall-clock time from `z_jail` invocation to the
 point the child would `execve(2)`. Lower is better.
 
 | metric | value |
