@@ -3,8 +3,9 @@
 ## [v1] - 2026-06-04
 
 ### Added
-- 6-layer sandbox: namespaces, pivot_root, caps,
-  NO_NEW_PRIVS, seccomp-BPF, audit
+- Seven ordered isolation layers: rlimits, fd scrub,
+  PR_SET_DUMPABLE, pivot_root, NO_NEW_PRIVS, cap drop,
+  seccomp-BPF
 - BLAKE2b content fingerprinting (RFC 7693)
 - BPF whitelist with 24 syscalls + arg restrictions for mmap, mprotect, prlimit64
 - Audit JSON output (`z-jail.audit/v1`)
@@ -15,7 +16,7 @@
 - bash, zsh, and fish shell completions
 - Man page (`man/z_jail.1`)
 - ADR documents (001–004)
-- 17 test scenarios (standalone + sandbox)
+- 18 test scenarios (standalone + sandbox)
 - Release signing placeholder
 
 ### Changed

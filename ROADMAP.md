@@ -1,10 +1,10 @@
 # Roadmap
 
 ## v1 (current)
-- 6-layer defence-in-depth sandbox
+- Seven ordered isolation layers
 - BLAKE2b-256 content fingerprinting
 - Audit JSON output (`z-jail.audit/v1`)
-- 17 test scenarios
+- 18 test scenarios (indexed 0\u201317)
 - man page, shell completions (bash, zsh, fish)
 - CI: build, coverage, lint, fuzz, weekly
 

@@ -3,12 +3,12 @@
   <h1>Z-Jail</h1>
   <p>
     Multi-layer sandbox for native code execution on Linux.<br/>
-    Six independent defence layers — no external dependencies, ~37 KiB PIE binary.
+    Seven ordered isolation layers — no external dependencies, ~83 KiB PIE binary.
   </p>
   <img src="https://img.shields.io/badge/platform-Linux%205.4%2B-blue?style=flat-square"/>
   <img src="https://img.shields.io/badge/language-C99-lightgrey?style=flat-square"/>
   <img src="https://img.shields.io/badge/license-MIT-red?style=flat-square"/>
-  <img src="https://img.shields.io/badge/size-~37%20KiB-green?style=flat-square"/>
+  <img src="https://img.shields.io/badge/size-~83%20KiB-green?style=flat-square"/>
 </div>
 
 ---
@@ -21,7 +21,7 @@
 │  pivot_root       (chroot on steroids)               │
 │  Capabilities     (drop all, lock securebits)        │
 │  NO_NEW_PRIVS     (no privilege escalation)          │
-│  seccomp-BPF      (whitelist: 24 syscalls only)      │
+│  seccomp-BPF      (whitelist-v1: 24 syscalls)      │
 │  Audit            (JSON logging + BLAKE2b hashing)   │
 └──────────────────────────────────────────────────────┘
 ```
@@ -65,7 +65,7 @@ Existing sandboxing solutions make trade-offs:
 |                    | **Z-Jail**  | **Firecracker** | **gVisor** | **bwrap** | **nsjail** |
 |--------------------|-------------|-----------------|------------|-----------|------------|
 | External deps      | **zero**    | libc, seccomp   | Go runtime | libc      | libc, protobuf |
-| Binary size        | **~37 KiB** | 20+ MiB         | 40+ MiB    | ~70 KiB   | ~1 MiB     |
+| Binary size        | **~83 KiB** | 20+ MiB         | 40+ MiB    | ~70 KiB   | ~1 MiB     |
 | VM isolation       | no          | yes (microVM)   | no (sandbox)| no        | no        |
 | seccomp whitelist  | **yes**     | no              | yes        | optional  | yes        |
 | Content hashing    | **yes**     | no              | no         | no        | no         |
@@ -135,50 +135,41 @@ sequenceDiagram
 
 ## Layers
 
-### 1. Namespaces
-Five namespaces are created via `clone()`:
+TAC applies seven ordered isolation mechanisms in the child before `execve`,
+each chosen so that a later step cannot be undone by re-executing an earlier one.
+The parent creates the child with `clone()` requesting five namespaces
+(mount, PID, network, IPC, UTS), then the child runs the following pipeline:
 
-| Namespace | Flag | Purpose |
-|-----------|------|---------|
-| Mount     | `CLONE_NEWNS` | Isolated filesystem tree |
-| PID       | `CLONE_NEWPID` | Process ID space (child is pid 1) |
-| Net       | `CLONE_NEWNET` | No network interfaces |
-| IPC       | `CLONE_NEWIPC` | No shared memory / semaphores |
-| UTS       | `CLONE_NEWUTS` | Separate hostname |
+### 1. Resource limits
+`setrlimit` caps CPU time, address space, open files, and process count
+before any guest-influenced code runs, bounding fork bombs and memory exhaustion.
 
-Requires `CAP_SYS_ADMIN` in the initial namespace.
+### 2. File-descriptor scrub
+All inherited descriptors except the parent report pipe are closed,
+preventing leaked handles from crossing `execve`.
 
-### 2. pivot_root
-Replaces the mount namespace root with the `--root` directory:
+### 3. Dumpability off
+`PR_SET_DUMPABLE=0` disables core dumps and restricts `/proc/self/mem` access.
 
-1. Bind-mount the root directory onto itself (`MS_BIND|MS_REC`)
-2. `pivot_root(new_root, put_old)` — swap the mount tree
-3. `chdir("/")` — move into the new root
-4. `umount2("/.pivot_old", MNT_DETACH)` — detach old root
-5. `rmdir("/.pivot_old")` — clean up
+### 4. `pivot_root`
+The mount namespace root is replaced with the supplied root directory:
+the directory is bind-mounted onto itself, `pivot_root` swaps the mount tree,
+the process `chdir`s to the new root, and the old root is lazily detached
+and removed. This is strictly stronger than `chroot(2)` because the previous
+root is unmounted rather than merely hidden.
 
-This is strictly stronger than `chroot(2)` — there is no way for the sandboxed process to escape back to the host root, even with `CLONE_NEWNS` from inside the sandbox (which is already blocked by seccomp).
+### 5. `NO_NEW_PRIVS`
+`PR_SET_NO_NEW_PRIVS` prevents any subsequent privilege gain through setuid
+binaries, file capabilities, or LSM transitions. Irreversible.
 
-### 3. Capabilities
-All capabilities are dropped via:
+### 6. Capability drop
+User and group IDs are changed while `CAP_SETUID` is still held, after which
+`capset` zeroes all capability sets and the securebits are locked, so
+capabilities cannot be re-enabled.
 
-```c
-capset(hdr, data)  // data = {0, 0, 0}
-prctl(SECBIT_KEEP_CAPS_LOCKED | SECBIT_NO_SETUID_FIXUP | ...)
-```
-
-The process drops `setuid`/`setgid` *before* `capset` so the uid change takes effect while `CAP_SETUID` is still held. After `capset`, all caps are gone and the securebits are locked — no re-enablement is possible.
-
-### 4. NO_NEW_PRIVS
-```c
-prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0);
-```
-
-Prevents the process or its children from gaining new privileges via `setuid` binaries, file capabilities, or `LSM` transitions. Irreversible.
-
-### 5. seccomp-BPF (whitelist-v1)
-
-Allow-list of 24 syscalls — anything not on the list gets `SECCOMP_RET_KILL`:
+### 7. seccomp-BPF (whitelist-v1)
+A whitelist filter is installed; non-whitelisted calls are terminated.
+Allow-list of 24 syscalls:
 
 | Syscall | Number | Notes |
 |---------|--------|-------|
@@ -209,35 +200,27 @@ Allow-list of 24 syscalls — anything not on the list gets `SECCOMP_RET_KILL`:
 
 The last nine (`arch_prctl` .. `pread64`) are the C-runtime startup calls a
 modern statically-linked glibc program needs before `main`. The BPF filter is
-generated dynamically: for each whitelist entry, a jump chain is emitted that either allows (if syscall matches) or falls through to KILL. Architecture is checked first (`AUDIT_ARCH_X86_64`).
+generated dynamically: for each whitelist entry a jump chain is emitted that
+either allows (if syscall matches) or falls through to KILL. Architecture is
+checked first (`AUDIT_ARCH_X86_64`).
 
-The filter is verified independently by a standalone test (`tests/seccomp_filter_test.c`, 8/8 pass) that fork+execves test cases against a real `prctl(PR_SET_SECCOMP)` without needing root.
+Three argument-level rules preserve the policy's intent:
+- `mmap` constrained to `flags == MAP_PRIVATE|MAP_ANONYMOUS (0x22)` and `PROT_EXEC` clear
+- `mprotect` restricted so `PROT_EXEC` is never set (enforces W^X)
+- `prlimit64` restricted to `NULL` new-limit argument (guest can read but not raise limits)
 
-### 6. Audit
-Every execution produces a JSON audit record:
+The filter is verified independently by a standalone test
+(`tests/seccomp_filter_test.c`, 8/8 pass) that fork+execves test cases against
+a real `prctl(PR_SET_SECCOMP)` without needing root.
 
-```json
-{
-  "schema": "z-jail.audit/v1",
-  "build_id": "Z-Jail/v1+dev",
-  "timestamp": 1749000000,
-  "duration_ns": 8500000,
-  "executable": "/bin/ls",
-  "verdict": "DETERMINISTIC",
-  "exit_code": 0,
-  "sandbox": {
-    "seccomp_filter": "whitelist-v1",
-    "seccomp_whitelist_size": 24,
-    "seccomp_arg_rules_size": 2,
-    "namespaces": ["mount","pid","net","ipc","uts"],
-    "pivot_root": "/var/run/z-jail/roots/default",
-    "no_new_privs": true,
-    "capabilities_dropped": true
-  },
-  "content_fingerprint": "0e5751c026e543b2e8ab2eb06099daa1...",
-  "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000"
-}
-```
+### Audit record
+After the child exits, the parent emits a JSON audit record conforming to a
+versioned schema (`z-jail.audit/v1`). The record includes execution duration,
+exit code, a verdict field, the active seccomp filter name and whitelist size,
+the enabled namespaces, and a `content_fingerprint`: a BLAKE2b-256 digest of
+the target binary computed by the parent. An optional `--self-hash` flag lets
+an operator pin the expected digest so tampering with the executable is
+detected before results are trusted.
 
 Written to `build/audits/<binary-name>.audit.json`. The `content_fingerprint` is
 the canonical BLAKE2b-256 hash of the target binary (reproducible with
@@ -342,7 +325,7 @@ These don't need root and run in under 100 ms.
 
 ```sh
 make -C tests setup          # build payloads + test roots
-sudo bash tests/run_tests.sh # 17 scenarios
+sudo bash tests/run_tests.sh # 18 scenarios (indexed 0\u201317)
 ```
 
 Requires root for namespace creation. The test suite covers:
@@ -463,10 +446,10 @@ relative.
 ## Roadmap
 
 ### v1 (current)
-- 6-layer defence-in-depth sandbox
+- Seven ordered isolation layers
 - BLAKE2b-256 content fingerprinting
 - Audit JSON output
-- 17 test scenarios
+- 18 test scenarios (indexed 0\u201317)
 - man page, completions (bash, zsh, fish)
 
 ### v2 (planned)

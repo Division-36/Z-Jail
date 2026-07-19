@@ -56,7 +56,7 @@ help:
 	@echo "  make          - build z_jail"
 	@echo "  make clean    - remove build artifacts"
 	@echo "  make check    - smoke test (--version)"
-	@echo "  make test     - run full test suite (17 scenarios)"
+	@echo "  make test     - run full test suite (18 scenarios)"
 	@echo "  make install  - install to \$$DESTDIR/usr/local"
 	@echo "  make dist     - create release tarball"
 	@echo "  make help     - show this message"

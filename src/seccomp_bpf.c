@@ -46,8 +46,10 @@ seccomp_rule axiom_whitelist[] = {
 int axiom_whitelist_size = (int)(sizeof(axiom_whitelist)/sizeof(axiom_whitelist[0]));
 
 seccomp_arg_rule axiom_arg_rules[] = {
-    {.nr=9, .arch=AUDIT_ARCH_X86_64, .arg_idx=3, .value=0x22, .mask=0},
-    {.nr=9, .arch=AUDIT_ARCH_X86_64, .arg_idx=2, .value=0x0, .mask=0x4},
+    {.nr=9,   .arch=AUDIT_ARCH_X86_64, .arg_idx=3, .value=0x22, .mask=0},
+    {.nr=9,   .arch=AUDIT_ARCH_X86_64, .arg_idx=2, .value=0x0,  .mask=0x4},
+    {.nr=10,  .arch=AUDIT_ARCH_X86_64, .arg_idx=2, .value=0x0,  .mask=0x4},
+    {.nr=302, .arch=AUDIT_ARCH_X86_64, .arg_idx=2, .value=0x0,  .mask=0},
 };
 int axiom_arg_rules_size = (int)(sizeof(axiom_arg_rules)/sizeof(axiom_arg_rules[0]));
 
