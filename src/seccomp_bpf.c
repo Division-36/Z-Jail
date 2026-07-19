@@ -120,7 +120,14 @@ int apply_whitelist(void)
     filter[pos++] = BPF_STMT(BPF_RET, SECCOMP_RET_KILL);
 
     filter[1].jt = 0;
-    filter[1].jf = (uint8_t)((kill_pos - 2) > 255 ? 255 : (kill_pos - 2));
+    {
+        int off = kill_pos - 2;
+        if (off < 0 || off > 255) {
+            axiom_log(LOG_ERROR,"seccomp: filter too large, jump offset %d exceeds BPF 8-bit limit\n", off);
+            free(filter); free(check_pos); return -1;
+        }
+        filter[1].jf = (uint8_t)off;
+    }
 
     for (i = 0; i < axiom_whitelist_size; i++) {
         int nr_idx = 2 + i*2 + 1;
@@ -130,8 +137,12 @@ int apply_whitelist(void)
             jf = 1;
         else
             jf = kill_pos - (nr_idx + 1);
-        filter[nr_idx].jt = (uint8_t)(jt > 255 ? 255 : jt);
-        filter[nr_idx].jf = (uint8_t)(jf > 255 ? 255 : jf);
+        if (jt < 0 || jt > 255 || jf < 0 || jf > 255) {
+            axiom_log(LOG_ERROR,"seccomp: filter too large, jump offset (jt=%d jf=%d) exceeds BPF 8-bit limit\n", jt, jf);
+            free(filter); free(check_pos); return -1;
+        }
+        filter[nr_idx].jt = (uint8_t)jt;
+        filter[nr_idx].jf = (uint8_t)jf;
     }
 
     pos = 2 + axiom_whitelist_size * 2;
@@ -140,15 +151,18 @@ int apply_whitelist(void)
         if (axiom_whitelist[i].arg_count > 0) {
             for (j = 0; j < axiom_whitelist[i].arg_count; j++) {
                 seccomp_arg_rule *r = &axiom_whitelist[i].arg_rules[j];
-                if (r->mask != 0) {
+                int off;
+                if (r->mask != 0)
                     pos += 2;
-                    filter[pos].jf = (uint8_t)((kill_pos - pos - 1) > 255 ? 255 : (kill_pos - pos - 1));
-                    pos++;
-                } else {
-                    pos++;
-                    filter[pos].jf = (uint8_t)((kill_pos - pos - 1) > 255 ? 255 : (kill_pos - pos - 1));
-                    pos++;
+                else
+                    pos += 1;
+                off = kill_pos - pos - 1;
+                if (off < 0 || off > 255) {
+                    axiom_log(LOG_ERROR,"seccomp: filter too large, arg jump offset %d exceeds BPF 8-bit limit\n", off);
+                    free(filter); free(check_pos); return -1;
                 }
+                filter[pos].jf = (uint8_t)off;
+                pos++;
             }
             pos++;
         } else {
