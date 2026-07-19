@@ -40,8 +40,8 @@ slower here; z_jail installs a seccomp whitelist, drops capabilities, and
 does `pivot_root` on every run (the `MS_REC|MS_PRIVATE` remount from the
 bug fix also walks the mount table, adding a small amount of setup latency).
 
-Binary size (this codebase, measured in the native run): **~83 KiB**
-unstripped (`-O2 -g`), **~37 KiB** stripped. Source lines of code
+Binary size (this codebase, measured in the native run): **~81 KiB**
+unstripped (`-O2 -g`), **~33 KiB** stripped. Source lines of code
 (`src` + `include`): ~800.
 
 ### Not directly comparable in this environment

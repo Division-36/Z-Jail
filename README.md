@@ -3,12 +3,12 @@
   <h1>Z-Jail</h1>
   <p>
     Multi-layer sandbox for native code execution on Linux.<br/>
-    Seven ordered isolation layers — no external dependencies, ~83 KiB PIE binary.
+    Seven ordered isolation layers — no external dependencies, ~81 KiB PIE binary.
   </p>
   <img src="https://img.shields.io/badge/platform-Linux%205.4%2B-blue?style=flat-square"/>
   <img src="https://img.shields.io/badge/language-C99-lightgrey?style=flat-square"/>
   <img src="https://img.shields.io/badge/license-MIT-red?style=flat-square"/>
-  <img src="https://img.shields.io/badge/size-~83%20KiB-green?style=flat-square"/>
+  <img src="https://img.shields.io/badge/size-~81%20KiB-green?style=flat-square"/>
 </div>
 
 ---
@@ -65,7 +65,7 @@ Existing sandboxing solutions make trade-offs:
 |                    | **Z-Jail**  | **Firecracker** | **gVisor** | **bwrap** | **nsjail** |
 |--------------------|-------------|-----------------|------------|-----------|------------|
 | External deps      | **zero**    | libc, seccomp   | Go runtime | libc      | libc, protobuf |
-| Binary size        | **~83 KiB** | 20+ MiB         | 40+ MiB    | ~70 KiB   | ~1 MiB     |
+| Binary size        | **~81 KiB** | 20+ MiB         | 40+ MiB    | ~70 KiB   | ~1 MiB     |
 | VM isolation       | no          | yes (microVM)   | no (sandbox)| no        | no        |
 | seccomp whitelist  | **yes**     | no              | yes        | optional  | yes        |
 | Content hashing    | **yes**     | no              | no         | no        | no         |
@@ -290,7 +290,7 @@ sudo z_jail --root=./roots --quiet -- bin/program
 ### Commands
 
 ```sh
-make              # build z_jail (~83 KiB unstripped PIE binary)
+make              # build z_jail (~81 KiB unstripped PIE binary)
 make install      # install to /usr/local/bin + man page
 make clean        # remove build artifacts
 make dist         # create release tarball
@@ -363,7 +363,7 @@ A WSL2 run on the same hardware is also reported in
 
 | Metric | Value |
 |--------|-------|
-| Binary size | ~83 KiB unstripped (~37 KiB stripped) |
+| Binary size | ~81 KiB unstripped (~33 KiB stripped) |
 | Mean sandbox latency | **2.31 ± 0.56 ms** (95% CI [2.16, 2.47]) |
 | Peak RSS | **1.61 MiB** |
 | Lines of code (core) | ~800 |

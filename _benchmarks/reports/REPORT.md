@@ -1,6 +1,6 @@
 # Z-Jail Benchmark Report
 
-- Binary: `z_jail` (~83 KiB unstripped, ~37 KiB stripped)
+- Binary: `z_jail` (~81 KiB unstripped, ~33 KiB stripped)
 - Latency samples: **50**
 - Memory  samples: **25**
 - Fan-out samples: **15**

@@ -3,7 +3,7 @@
 GCC 11+, Linux 5.4+, no external deps.
 ## Commands
 ```
-make          # z_jail (~83 KiB unstripped PIE)
+make          # z_jail (~81 KiB unstripped PIE)
 make clean
 make build_id
 ```

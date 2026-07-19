@@ -34,4 +34,4 @@
 
 ---
 
-~135 commits across 6 weeks. Zero external dependencies, ~83 KiB binary.
+~135 commits across 6 weeks. Zero external dependencies, ~81 KiB binary.
