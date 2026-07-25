@@ -21,7 +21,7 @@
 │  pivot_root       (chroot on steroids)               │
 │  Capabilities     (drop all, lock securebits)        │
 │  NO_NEW_PRIVS     (no privilege escalation)          │
-│  seccomp-BPF      (whitelist-v1: 24 syscalls)      │
+│  seccomp-BPF      (whitelist-v1: 24 syscalls)        │
 │  Audit            (JSON logging + BLAKE2b hashing)   │
 └──────────────────────────────────────────────────────┘
 ```
