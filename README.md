@@ -450,12 +450,16 @@ relative.
 
 ## Roadmap
 
-### v1 (current)
+### v1.1.0 (current)
 - Seven ordered isolation layers
 - BLAKE2b-256 content fingerprinting
-- Audit JSON output
-- 18 test scenarios (indexed 0\u201317)
+- Audit JSON output with `append_only` tracking and `fdatasync` durability
+- seccomp-BPF jump offset validation (fail closed on overflow)
+- `--no-audit` flag to disable audit file creation
+- `STATIC=1` build option for self-contained binary
+- 18 test scenarios (indexed 0\u201317) + 8 seccomp unit checks
 - man page, completions (bash, zsh, fish)
+- seccomp robustness benchmark
 
 ### v2 (planned)
 - External seccomp policy file (JSON or BPF source)
@@ -463,6 +467,7 @@ relative.
 - Configurable syscall whitelist via CLI
 - Performance profiling hooks for CI integration
 - Release signing (minisign/signify)
+- Fuzz integration (oss-fuzz / libFuzzer)
 
 ---
 

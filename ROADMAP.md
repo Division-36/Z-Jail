@@ -1,12 +1,16 @@
 # Roadmap
 
-## v1 (current)
+## v1.1.0 (current)
 - Seven ordered isolation layers
 - BLAKE2b-256 content fingerprinting
-- Audit JSON output (`z-jail.audit/v1`)
-- 18 test scenarios (indexed 0\u201317)
+- Audit JSON output (`z-jail.audit/v1`) with `append_only` tracking and `fdatasync` durability
+- seccomp-BPF jump offset validation (fail closed on overflow)
+- `--no-audit` flag to disable audit file creation
+- `STATIC=1` build option for self-contained binary
+- 18 test scenarios (indexed 0\u201317) + 8 seccomp unit checks
 - man page, shell completions (bash, zsh, fish)
-- CI: build, coverage, lint, fuzz, weekly
+- seccomp robustness benchmark (`_benchmarks/seccomp_robustness/`)
+- CI: build, coverage, lint, weekly
 
 ## v2 (planned)
 - seccomp policy configuration via external JSON file
@@ -14,6 +18,7 @@
 - Configurable syscall whitelist entries at runtime
 - Performance profiling hooks for CI latency tracking
 - Release signing (minisign)
+- Fuzz integration (oss-fuzz / libFuzzer)
 
 ## v3 (stretch)
 - User namespace support (rootless operation)
