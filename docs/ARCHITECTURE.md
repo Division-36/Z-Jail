@@ -1,6 +1,7 @@
 # Architecture
-6 defence-in-depth layers: Namespaces, pivot_root,
-Capability drop, NO_NEW_PRIVS, seccomp-BPF whitelist, Audit.
+7 defence-in-depth layers: rlimits, fd scrub, PR_SET_DUMPABLE,
+pivot_root, NO_NEW_PRIVS, capability drop, seccomp-BPF whitelist.
+Audit trail written after child exit.
 Data flow: CLI -> parse_args -> clone(namespaces) -> child_run -> execve -> audit
 
 The audit layer writes tamper-evident JSON: canonical BLAKE2b-256 content

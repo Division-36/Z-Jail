@@ -2,7 +2,15 @@ CC := gcc
 CFLAGS := -O2 -g -fstack-protector-strong -D_FORTIFY_SOURCE=2
 CFLAGS += -fPIC -fno-strict-aliasing -Werror=implicit-function-declaration
 CFLAGS += -Wall -Wextra -std=gnu11 -I include
+# Statically linked so the sandbox binary is self-contained and dependency-free
+# (no libc/loader required on the target). Override at invocation if desired,
+# e.g.  make STATIC=0  to keep a PIE (ASLR-hardened) build instead.
+STATIC ?= 1
+ifeq ($(STATIC),1)
+LDFLAGS := -Wl,-z,now -Wl,-z,relro -static
+else
 LDFLAGS := -Wl,-z,now -Wl,-z,relro -pie
+endif
 
 SRC := src/log.c src/util.c src/seccomp_bpf.c
 SRC += src/audit.c src/sandbox.c src/z_jail.c

@@ -1,5 +1,35 @@
 # Changelog
 
+## [v1.1.0] - 2026-07-25
+
+### Security
+- **Critical:** Fixed seccomp-BPF jump offset miscompilation (SJOM)
+  - Conditional jumps exceeding 8-bit field (max 255) were silently clamped
+  - At 86 syscalls, arch-check lands on RET ALLOW instead of RET KILL
+  - Fix: bounds check returns -1 on overflow, tool refuses to run
+  - Commit: 9d96132
+
+### Added
+- seccomp filter unit test (`tests/seccomp_filter_test.c`)
+- Full native benchmark script (`_benchmarks/full_native_benchmark.sh`)
+- VM benchmark runner (`_benchmarks/run_benchmark_vm.ps1`)
+- THREAT_MODEL documentation
+- ADR-004: seccomp whitelist strategy
+
+### Changed
+- Removed Truthimatics module (include/truthimatics.h, src/truthimatics.c)
+- Expanded seccomp whitelist-v1 for modern glibc
+- Aligned docs with measured build (81 KiB / 33 KiB / 800 SLOC)
+- Reverted license to MIT
+
+### Fixed
+- Benchmark harness: apt lock wait, bwrap root under /tmp, timeout guards
+- nsjail VM execution: --disable_clone_newuser
+- Test runner: stdin redirect from /dev/null
+- Stale 'Axiom-Jail' identity in benchmark reports
+
+---
+
 ## [v1] - 2026-06-04
 
 ### Added

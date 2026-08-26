@@ -108,19 +108,23 @@ static int audit_open_fd(const char *path)
  * Once set, even the owner cannot truncate or overwrite existing bytes; only a
  * process holding CAP_LINUX_IMMUTABLE can clear the flag. This is best-effort:
  * on filesystems without flag support, or without the capability, it degrades
- * gracefully so auditing still works (without the tamper resistance). */
-static void audit_set_append_only(int fd)
+ * gracefully so auditing still works (without the tamper resistance).
+ * Returns 1 if the flag is actually set on the inode, 0 otherwise. */
+static int audit_set_append_only(int fd)
 {
     int flags = 0;
     if (ioctl(fd, (unsigned long)FS_IOC_GETFLAGS, &flags) != 0)
-        return;
+        return 0;
     if (flags & FS_APPEND_FL)
-        return;
+        return 1;
     flags |= FS_APPEND_FL;
-    if (ioctl(fd, (unsigned long)FS_IOC_SETFLAGS, &flags) != 0)
+    if (ioctl(fd, (unsigned long)FS_IOC_SETFLAGS, &flags) != 0) {
         axiom_log(LOG_WARN,
             "audit: append-only (chattr +a) not applied to %s: %s\n",
             "audit file", strerror(errno));
+        return 0;
+    }
+    return 1;
 }
 
 axiom_audit *axiom_audit_open(const char *path)
@@ -146,7 +150,7 @@ axiom_audit *axiom_audit_open(const char *path)
     if (audit->fd < 0) { free(audit->path); free(audit); return NULL; }
 
     fchmod(audit->fd, 0600);
-    audit_set_append_only(audit->fd);
+    audit->append_only = audit_set_append_only(audit->fd);
     audit->start_time = time(NULL);
     return audit;
 }
@@ -165,6 +169,11 @@ int axiom_audit_write(axiom_audit *audit, const char *table, const char *json)
 
     w = write(audit->fd, buf, (size_t)n);
     if (w < 0 || (size_t)w != (size_t)n) return -1;
+
+    /* Persist the record before answering: an uncommitted write could be lost
+     * to a power cut or crash, silently truncating the trail. fdatasync(2)
+     * flushes file data only (no metadata churn), keeping the hot path cheap. */
+    if (fdatasync(audit->fd) != 0) return -1;
 
     /* Advance the chain: the anchor for the NEXT record is the digest of this
      * record's JSON line, excluding the trailing newline. A verifier computes

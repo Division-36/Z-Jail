@@ -3,9 +3,9 @@
 extern char **environ;
 #define CHILD_STACK_SIZE (1024*1024)
 
-static int parse_args(int argc,char**argv,sandbox_config*cfg,char**self_hash_hex,int *quiet)
+static int parse_args(int argc,char**argv,sandbox_config*cfg,char**self_hash_hex,int *quiet,int *no_audit)
 {
-    int i,cmd_start=-1; *self_hash_hex=NULL; *quiet=0;
+    int i,cmd_start=-1; *self_hash_hex=NULL; *quiet=0; *no_audit=0;
     cfg->root_path=".";cfg->seccomp_enforce=0;cfg->timeout_sec=30;cfg->as_limit=256ULL*1024*1024;
     for(i=1;i<argc;i++){
         if(strcmp(argv[i],"--")==0){cmd_start=i+1;break;}
@@ -13,8 +13,9 @@ static int parse_args(int argc,char**argv,sandbox_config*cfg,char**self_hash_hex
         else if(strcmp(argv[i],"--seccomp-enforce")==0)cfg->seccomp_enforce=1;
         else if(strncmp(argv[i],"--self-hash=",12)==0)*self_hash_hex=argv[i]+12;
         else if(strcmp(argv[i],"--quiet")==0)*quiet=1;
+        else if(strcmp(argv[i],"--no-audit")==0)*no_audit=1;
         else if(strcmp(argv[i],"--verbose")==0)axiom_log_level=LOG_DEBUG;
-        else if(strcmp(argv[i],"--help")==0){printf("Usage: z_jail --root=<dir> [--seccomp-enforce] [--self-hash=<hex>] [--quiet] [--verbose] -- <program> [args...]\n");exit(0);}
+        else if(strcmp(argv[i],"--help")==0){printf("Usage: z_jail --root=<dir> [--seccomp-enforce] [--self-hash=<hex>] [--quiet] [--no-audit] [--verbose] -- <program> [args...]\n");exit(0);}
         else if(strcmp(argv[i],"--version")==0){printf("%s\n",ZJAIL_BUILD_ID);exit(0);}
         else if(argv[i][0]=='-'){fprintf(stderr,"unknown: %s\n",argv[i]);return -1;}
         else{cmd_start=i;break;}
@@ -45,12 +46,12 @@ int main(int argc,char**argv){
     int pipe_fds[2];pid_t child_pid;int status;long long start_ns,end_ns;
     void*child_stack;axiom_verdict verdict;char audit_json[8192];
     uint8_t file_hash[32];char file_hash_hex[65];char audit_path[4096];
-    const char*exe_name;int quiet;
-    if(parse_args(argc,argv,&cfg,&self_hash_hex,&quiet)<0)return 1;
+    const char*exe_name;int quiet;int no_audit;
+    if(parse_args(argc,argv,&cfg,&self_hash_hex,&quiet,&no_audit)<0)return 1;
     {int r=do_self_hash(self_hash_hex);if(r<0){return r==-2?3:2;}}
     exe_name=strrchr(cfg.exec_path,'/');exe_name=exe_name?exe_name+1:cfg.exec_path;
     snprintf(audit_path,sizeof(audit_path),"build/audits/%s.audit.json",exe_name);
-    audit=axiom_audit_open(audit_path);
+    audit=no_audit?NULL:axiom_audit_open(audit_path);
     if(pipe2(pipe_fds,O_CLOEXEC)<0){perror("pipe2");return 1;}
     cfg.report_fd=pipe_fds[1];
     child_stack=malloc(CHILD_STACK_SIZE);if(!child_stack){perror("malloc");return 1;}
@@ -74,10 +75,11 @@ int main(int argc,char**argv){
         ",\"seccomp_whitelist_size\":%d,\"seccomp_arg_rules_size\":%d"
         ",\"namespaces\":[\"mount\",\"pid\",\"net\",\"ipc\",\"uts\"]"
         ",\"pivot_root\":\"%s\",\"no_new_privs\":true,\"capabilities_dropped\":true"
-        "},\"content_fingerprint\":\"%s\",\"prev_hash\":\"%s\"}"
+        "},\"content_fingerprint\":\"%s\",\"append_only\":%s,\"prev_hash\":\"%s\"}"
         ,(long long)time(NULL),end_ns-start_ns,cfg.exec_path,verdict_str(verdict)
         ,WIFEXITED(status)?WEXITSTATUS(status):-WTERMSIG(status)
-        ,axiom_whitelist_size,axiom_arg_rules_size,cfg.root_path,file_hash_hex,prev_hash);
+        ,axiom_whitelist_size,axiom_arg_rules_size,cfg.root_path,file_hash_hex
+        ,(audit && audit->append_only) ? "true" : "false",prev_hash);
     if(!quiet&&audit)axiom_audit_write(audit,"sessions",audit_json);
     axiom_audit_close(audit);
     return WIFEXITED(status)?WEXITSTATUS(status):1;

@@ -7,7 +7,7 @@ Bug reports, feature requests, and pull requests are welcome.
 - **No external dependencies** — patches that pull in libseccomp, libcap, or similar will be rejected. We roll our own BPF, capabilities, and hashing.
 - **Keep it minimal** — Z-Jail is ~900 LoC of core logic. New features should justify their size.
 - **Test it** — add or update test scenarios in `tests/`. Run `make -C tests setup && bash tests/run_tests.sh` (needs root).
-- **No new sycalls in the whitelist without ADR** — seccomp changes require an Architecture Decision Record in `docs/adr/`.
+- **No new syscalls in the whitelist without ADR** — seccomp changes require an Architecture Decision Record in `docs/adr/`.
 
 ## Pull Request Process
 

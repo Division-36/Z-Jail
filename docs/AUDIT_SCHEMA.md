@@ -25,6 +25,7 @@ Single-line JSON written to `build/audits/<name>.audit.json`.
 | sandbox.no_new_privs | bool | Always `true` |
 | sandbox.capabilities_dropped | bool | Always `true` |
 | content_fingerprint | string | Canonical BLAKE2b-256 hex of the binary (equals `b2sum -l 256`) |
+| append_only | bool | `true` if `FS_APPEND_FL` (`chattr +a`) was applied to the audit file |
 | prev_hash | string | BLAKE2b-256 hex of the previous record line; 64 zeros for the first (genesis) record |
 
 ## Integrity

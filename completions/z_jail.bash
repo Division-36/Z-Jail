@@ -3,7 +3,7 @@ _z_jail() {
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     case "$prev" in
         --root) COMPREPLY=($(compgen -d -- "$cur")) ;;
-        *) COMPREPLY=($(compgen -W "--root= --seccomp-enforce --self-hash --version" -- "$cur")) ;;
+        *) COMPREPLY=($(compgen -W "--root= --seccomp-enforce --self-hash --quiet --no-audit --verbose --version --help" -- "$cur")) ;;
     esac
 }
 complete -F _z_jail z_jail

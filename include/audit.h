@@ -4,6 +4,9 @@ typedef struct {
     char     *path;
     int       fd;
     time_t    start_time;
+    /* 1 if FS_APPEND_FL was successfully applied to the audit file — the
+     * "chattr +a" inode flag. Recorded so each audit record can attest to it. */
+    int       append_only;
     /* Rolling hash chain: BLAKE2b-256 (hex) of the previous audit record's
      * JSON line, or 64 zeros for the genesis (first) record. Each record
      * commits to its predecessor so deletion, reordering or in-place edits

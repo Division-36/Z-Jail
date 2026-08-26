@@ -17,6 +17,7 @@
 ┌──────────────────────────────────────────────────────┐
 │                    Z-Jail                            │
 ├──────────────────────────────────────────────────────┤
+│  rlimits           (CPU, AS, NOFILE, NPROC caps)     │
 │  Namespaces       (mount, pid, net, ipc, uts)        │
 │  pivot_root       (chroot on steroids)               │
 │  Capabilities     (drop all, lock securebits)        │
@@ -135,7 +136,7 @@ sequenceDiagram
 
 ## Layers
 
-TAC applies seven ordered isolation mechanisms in the child before `execve`,
+Z-Jail applies seven ordered isolation mechanisms in the child before `execve`,
 each chosen so that a later step cannot be undone by re-executing an earlier one.
 The parent creates the child with `clone()` requesting five namespaces
 (mount, PID, network, IPC, UTS), then the child runs the following pipeline:
@@ -244,6 +245,7 @@ z_jail --root=<dir> [--seccomp-enforce] [--self-hash=<hex>]
 | `--seccomp-enforce` | Enable seccomp-BPF syscall whitelist |
 | `--self-hash=<hex>` | Verify binary matches expected BLAKE2b-256 hash |
 | `--quiet` | Suppress audit output |
+| `--no-audit` | Disable audit file creation entirely |
 | `--verbose` | Enable debug logging |
 | `--version` | Show build ID (`Z-Jail/v1+dev`) |
 | `--help` | Show usage and exit |
@@ -256,10 +258,13 @@ sudo z_jail --root=./roots --seccomp-enforce -- bin/hello_static
 
 # Run with binary integrity verification
 sudo z_jail --root=./roots --seccomp-enforce \
-  --self-hash=$(sha256sum z_jail | cut -c1-64) -- bin/program
+  --self-hash=$(b2sum -l 256 z_jail | cut -c1-64) -- bin/program
 
 # Quiet mode (no audit JSON)
 sudo z_jail --root=./roots --quiet -- bin/program
+
+# Disable audit file creation entirely
+sudo z_jail --root=./roots --no-audit -- bin/program
 ```
 
 ### Exit Codes
@@ -335,7 +340,7 @@ Requires root for namespace creation. The test suite covers:
 | 0 | blake2b_regress | known-answer | BLAKE2b implementation correctness |
 | 1 | seccomp_filter | standalone BPF | 8 sub-tests of the BPF filter logic |
 | 2 | hello_static | ok | Basic static binary execution |
-| 3 | hello_dynamic | ok | Dynamic binary with ld-linux + libc |
+| 3 | hello_dynamic | killed | Dynamic binary rejected (W^X blocks PROT_EXEC for ld.so) |
 | 4 | execve_replacement | ok | execve in sandbox (blocked by seccomp) |
 | 5 | fd_inherited_read | ok | stdin/stdout inherited correctly |
 | 6 | mmap_bad_flags | killed | mmap with MAP_SHARED blocked |
