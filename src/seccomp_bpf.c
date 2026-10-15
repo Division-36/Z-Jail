@@ -34,7 +34,7 @@ seccomp_rule axiom_whitelist[] = {
      }},
     {.nr = 302, .arch = AUDIT_ARCH_X86_64, .arg_count = 1,
      .arg_rules = {
-        {.nr=302, .arch=AUDIT_ARCH_X86_64, .arg_idx=2, .value=0x0, .mask=0},
+        {.nr=302, .arch=AUDIT_ARCH_X86_64, .arg_idx=2, .value=0x0, .mask=0, .hi_zero=1},
      }},
     {.nr = 267, .arch = AUDIT_ARCH_X86_64, .arg_count = 0},
     {.nr = 334, .arch = AUDIT_ARCH_X86_64, .arg_count = 0},
@@ -50,6 +50,7 @@ seccomp_arg_rule axiom_arg_rules[] = {
     {.nr=9,   .arch=AUDIT_ARCH_X86_64, .arg_idx=2, .value=0x0,  .mask=0x4},
     {.nr=10,  .arch=AUDIT_ARCH_X86_64, .arg_idx=2, .value=0x0,  .mask=0x4},
     {.nr=302, .arch=AUDIT_ARCH_X86_64, .arg_idx=2, .value=0x0,  .mask=0},
+    {.nr=302, .arch=AUDIT_ARCH_X86_64, .arg_idx=2, .value=0x0,  .mask=0, .hi_zero=1},
 };
 int axiom_arg_rules_size = (int)(sizeof(axiom_arg_rules)/sizeof(axiom_arg_rules[0]));
 
@@ -67,6 +68,7 @@ static int count_instructions(void)
             for (j = 0; j < axiom_whitelist[i].arg_count; j++) {
                 if (axiom_whitelist[i].arg_rules[j].mask != 0) count += 3;
                 else count += 2;
+                if (axiom_whitelist[i].arg_rules[j].hi_zero) count += 2;
             }
             count += 1;
         } else { count += 1; }
@@ -108,6 +110,10 @@ int apply_whitelist(void)
                 } else {
                     filter[pos++] = BPF_STMT(BPF_LD|BPF_W|BPF_ABS, off);
                     filter[pos++] = BPF_JUMP(BPF_JMP|BPF_JEQ, r->value, 0, 1);
+                }
+                if (r->hi_zero) {
+                    filter[pos++] = BPF_STMT(BPF_LD|BPF_W|BPF_ABS, off + 4);
+                    filter[pos++] = BPF_JUMP(BPF_JMP|BPF_JEQ, 0, 0, 1);
                 }
             }
             filter[pos++] = BPF_STMT(BPF_RET, SECCOMP_RET_ALLOW);
@@ -163,6 +169,16 @@ int apply_whitelist(void)
                 }
                 filter[pos].jf = (uint8_t)off;
                 pos++;
+                if (r->hi_zero) {
+                    /* extra LD sits at pos, its JEQ at pos+1 */
+                    off = kill_pos - (pos + 1) - 1;
+                    if (off < 0 || off > 255) {
+                        axiom_log(LOG_ERROR,"seccomp: filter too large, hi-word jump offset %d exceeds BPF 8-bit limit\n", off);
+                        free(filter); free(check_pos); return -1;
+                    }
+                    filter[pos + 1].jf = (uint8_t)off;
+                    pos += 2;
+                }
             }
             pos++;
         } else {

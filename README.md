@@ -20,8 +20,8 @@
 │  rlimits           (CPU, AS, NOFILE, NPROC caps)     │
 │  Namespaces       (mount, pid, net, ipc, uts)        │
 │  pivot_root       (chroot on steroids)               │
-│  Capabilities     (drop all, lock securebits)        │
 │  NO_NEW_PRIVS     (no privilege escalation)          │
+│  Capabilities     (drop all, lock securebits)        │
 │  seccomp-BPF      (whitelist-v1: 24 syscalls)        │
 │  Audit            (JSON logging + BLAKE2b hashing)   │
 └──────────────────────────────────────────────────────┘
@@ -180,7 +180,7 @@ Allow-list of 24 syscalls:
 | `close` | 3 | — |
 | `lseek` | 8 | — |
 | `brk` | 12 | heap management |
-| `mmap` | 9 | arg-restricted: `flags & 4 == 0` (no MAP_SHARED), `flags == 0x22` (MAP_PRIVATE\|MAP_ANONYMOUS) |
+| `mmap` | 9 | arg-restricted: `flags == 0x22` exactly (MAP_PRIVATE\|MAP_ANONYMOUS) and `prot & PROT_EXEC == 0` |
 | `munmap` | 11 | — |
 | `execve` | 59 | single exec at startup |
 | `exit_group` | 231 | clean process exit |
@@ -338,10 +338,10 @@ Requires root for namespace creation. The test suite covers:
 | # | Scenario | Type | What it tests |
 |---|----------|------|---------------|
 | 0 | blake2b_regress | known-answer | BLAKE2b implementation correctness |
-| 1 | seccomp_filter | standalone BPF | 8 sub-tests of the BPF filter logic |
+| 1 | seccomp_filter | standalone BPF | 9 sub-tests of the BPF filter logic |
 | 2 | hello_static | ok | Basic static binary execution |
 | 3 | hello_dynamic | killed | Dynamic binary rejected (W^X blocks PROT_EXEC for ld.so) |
-| 4 | execve_replacement | ok | execve in sandbox (blocked by seccomp) |
+| 4 | execve_replacement | ok | one policy-conformant execve at startup |
 | 5 | fd_inherited_read | ok | stdin/stdout inherited correctly |
 | 6 | mmap_bad_flags | killed | mmap with MAP_SHARED blocked |
 | 7 | mmap_good_allowed | ok | mmap with MAP_PRIVATE\|ANONYMOUS allowed |
@@ -352,7 +352,7 @@ Requires root for namespace creation. The test suite covers:
 | 12 | chroot_escape | killed | chroot syscall blocked |
 | 13 | double_chroot | killed | Double chroot blocked |
 | 14 | mount_replay | killed | Mount syscall blocked |
-| 15 | cpu_exhaust | killed | RLIMIT_NPROC blocks fork bomb |
+| 15 | cpu_exhaust | killed | fork bomb bounded by RLIMIT_NPROC (not CPU) |
 | 16 | signal_parent | killed | Signal to parent blocked |
 | 17 | self_hash | ok | Binary integrity verification |
 
@@ -420,7 +420,7 @@ relative.
 ### Assumptions
 - Host kernel is unmodified Linux ≥ 5.4
 - `clone(CLONE_NEWNS|CLONE_NEWPID|...)` succeeds (requires `CAP_SYS_ADMIN`)
-- Target binary is statically linked (or dynamic libraries are available in `--root`)
+- Target binary must be statically linked (dynamic binaries are rejected by W^X even if libraries are staged in `--root`)
 - `--self-hash=<hex>` is configured in production deployments
 
 ---

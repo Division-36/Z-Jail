@@ -18,7 +18,8 @@ Argument-level restrictions:
 ```
 mmap     : flags == 0x22 (MAP_PRIVATE | MAP_ANONYMOUS)  AND  (prot & PROT_EXEC) == 0
 mprotect : (prot & PROT_EXEC) == 0        # preserves W^X; no page becomes executable
-prlimit64: new_limit == NULL              # read-only; the guest cannot raise its own rlimits
+prlimit64: new_limit == NULL (full 64-bit check: low word and high word
+           both compared; a nonzero pointer with a zero low word is killed)
 ```
 
 The `mprotect` and `prlimit64` restrictions are essential: an unrestricted

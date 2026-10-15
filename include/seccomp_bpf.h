@@ -6,6 +6,8 @@ typedef struct {
     uint32_t arg_idx;
     uint32_t value;
     uint32_t mask;
+    uint32_t hi_zero; /* also require bits 63..32 of the arg to be zero
+                         (full 64-bit check; BPF loads are 32-bit) */
 } seccomp_arg_rule;
 
 typedef struct {

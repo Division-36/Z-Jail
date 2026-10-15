@@ -11,6 +11,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/resource.h>
 #include "../include/z_jail.h"
 #include "../include/seccomp_bpf.h"
 
@@ -84,6 +85,14 @@ static void do_mmap_good(void) {
     munmap(p, 4096);
 }
 static void do_write(void) { write(STDOUT_FILENO, "", 0); }
+static void do_prlimit64_high(void) {
+    /* new_limit with zero low word but nonzero high word: a 32-bit-only
+       NULL check lets this through (kernel then faults on dereference);
+       a full 64-bit check must kill the caller with SIGSYS */
+    void *p = (void *)0x100000000ULL;
+    long r = syscall(SYS_prlimit64, 0, RLIMIT_NOFILE, p, NULL);
+    (void)r;
+}
 
 int main(void) {
     printf("=== Seccomp Filter Test ===\n");
@@ -94,6 +103,7 @@ int main(void) {
     test_allowed("openat (via glibc open)", do_openat);
     test_blocked("getpid", do_getpid);
     test_allowed("mmap good flags (MAP_PRIVATE|MAP_ANONYMOUS, RW)", do_mmap_good);
+    test_blocked("prlimit64 nonzero high word", do_prlimit64_high);
     test_allowed("write", do_write);
     printf("--- %d passed, %d failed ---\n", n_pass, n_fail);
     return n_fail > 0 ? 1 : 0;

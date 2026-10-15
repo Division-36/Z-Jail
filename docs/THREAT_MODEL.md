@@ -31,7 +31,7 @@ mechanisms (see `docs/AUDIT_SCHEMA.md`):
 
 ## Assumptions
 - Host kernel is unmodified Linux ≥ 5.4
-- `clone(CLONE_NEWNS|CLONE_NEWPID|...)` succeeds (CAP_SYS_ADMIN
-  in initial namespace, or user namespace support)
-- Binary is statically linked (mprotect banned; no dynamic loader)
+- `clone(CLONE_NEWNS|CLONE_NEWPID|...)` succeeds (requires CAP_SYS_ADMIN
+  in the initial namespace; no user-namespace/rootless path yet)
+- Binary is statically linked (mprotect restricted to non-EXEC; no dynamic loader)
 - `--self-hash=<hex>` is configured in production deployments
