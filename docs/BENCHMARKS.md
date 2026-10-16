@@ -31,7 +31,7 @@ A WSL2 run on the same hardware is reported in the Notes section.
 | Tool    | Latency mean +/- sd | 95% CI (ms)   | Peak RSS | Default seccomp |
 |---------|---------------------|---------------|----------|-----------------|
 | **z_jail** | 2.31 +/- 0.56 ms | [2.16, 2.47] | **1.61 MiB** | yes |
-| bwrap   | 3.35 +/- 0.60 ms | [3.18, 3.51] | 2.32 MiB | no |
+| bwrap   | 3.35 +/- 0.60 ms | [3.18, 3.52] | 2.32 MiB | no |
 | nsjail  | 6.28 +/- 1.48 ms    | [5.87, 6.69]  | 7.86 MiB | yes |
 
 z_jail has the smallest resident set and the lowest latency of the three
@@ -58,6 +58,8 @@ unstripped (`-O2 -g`), **~33 KiB** stripped. Source lines of code
 
 - Numbers are single-host and will differ across kernels, hardware, and
   virtualization (native vs WSL2); treat them as relative, not absolute.
+- Overhead figures predate the prlimit64 high-word fix (two extra BPF
+  instructions on one rule path; effect negligible).
 - WSL2 run (same hardware, kernel `6.18.x-microsoft-standard-WSL2`): z_jail
   5.42 +/- 1.43 ms, bwrap 6.84 +/- 1.91 ms, nsjail 10.18 +/- 2.59 ms; z_jail
   peak RSS 1.55 MiB (see `_benchmarks/reports/wsl_run/`). Virtualization

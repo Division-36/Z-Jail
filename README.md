@@ -191,7 +191,7 @@ Allow-list of 24 syscalls:
 | `fstat` | 5 | file metadata |
 | `arch_prctl` | 158 | TLS setup |
 | `mprotect` | 10 | arg-restricted: `prot & PROT_EXEC == 0` (preserves W^X) |
-| `prlimit64` | 302 | arg-restricted: `new_limit == NULL` (read-only; cannot raise rlimits) |
+| `prlimit64` | 302 | arg-restricted: `new_limit == NULL` full 64-bit (low + high word both zero; read-only) |
 | `readlinkat` | 267 | — |
 | `rseq` | 334 | glibc restartable sequences |
 | `set_robust_list` | 273 | glibc thread init |
@@ -208,10 +208,10 @@ checked first (`AUDIT_ARCH_X86_64`).
 Three argument-level rules preserve the policy's intent:
 - `mmap` constrained to `flags == MAP_PRIVATE|MAP_ANONYMOUS (0x22)` and `PROT_EXEC` clear
 - `mprotect` restricted so `PROT_EXEC` is never set (enforces W^X)
-- `prlimit64` restricted to `NULL` new-limit argument (guest can read but not raise limits)
+- `prlimit64` restricted to `NULL` new-limit argument, checked full 64-bit (guest can read but not raise limits)
 
 The filter is verified independently by a standalone test
-(`tests/seccomp_filter_test.c`, 8/8 pass) that fork+execves test cases against
+(`tests/seccomp_filter_test.c`, 9/9 pass) that fork+execves test cases against
 a real `prctl(PR_SET_SECCOMP)` without needing root.
 
 ### Audit record
@@ -317,7 +317,7 @@ make CC=clang CFLAGS="-O3 -march=native"   # custom compiler/flags
 ### Quick Test (no root)
 
 ```sh
-# seccomp filter logic (8 tests)
+# seccomp filter logic (9 tests)
 tests/build/seccomp_filter_test
 
 # BLAKE2b known-answer test
@@ -457,7 +457,7 @@ relative.
 - seccomp-BPF jump offset validation (fail closed on overflow)
 - `--no-audit` flag to disable audit file creation
 - `STATIC=1` build option for self-contained binary
-- 18 test scenarios (indexed 0\u201317) + 8 seccomp unit checks
+- 18 test scenarios (indexed 0\u201317) + 9 seccomp unit checks
 - man page, completions (bash, zsh, fish)
 - seccomp robustness benchmark
 

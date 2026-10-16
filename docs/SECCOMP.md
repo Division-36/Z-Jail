@@ -9,7 +9,7 @@ clock_gettime, fstat, arch_prctl, mprotect(arg-restricted), prlimit64(arg-restri
 readlinkat, rseq, set_robust_list, set_tid_address, access, pread64
 ```
 
-The last eight (`arch_prctl` .. `pread64`) are the C-runtime startup calls that
+The last nine (`arch_prctl` .. `pread64`) are the C-runtime startup calls that
 a modern statically-linked glibc program needs before `main`; without them
 even a trivial static binary is killed at load time.
 

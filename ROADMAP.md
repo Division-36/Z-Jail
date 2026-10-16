@@ -25,3 +25,11 @@
 - Landlock LSM integration
 - seccomp notify (SECCOMP_IOCTL_NOTIF_RECV) for dynamic policy
 - BPF CO-RE for cross-kernel seccomp portability
+
+## Paper controls backlog (CCGrid submission; unplanned unless adopted)
+- F1 harness-side default-deny egress + dependency scoping (operator guidance)
+- F2 minimal-runtime routing guidance for capable agents (operator guidance)
+- F4 control-group (cgroup) v2 per-instance caps + kill-on-budget + accounting
+- F5 off-host audit tip commitment (blocking commit, loss window, fail-closed forwarder, `--no-audit` forbidden; key custody off-host)
+- F6b descriptor-pinned execution + fail-closed expected-digest production profile + manager minimization
+- F7 evaluation hygiene (refusal scoping, trajectory monitoring, forensic models, attribution channel)
